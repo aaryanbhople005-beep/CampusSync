@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class='dashboard'>
+    <div class='dashboard-header'>
+        <h2>Admin Dashboard</h2>
+        <p>Welcome, {{ session.full_name }} | System Overview</p>
+    </div>
+    
+    <div class='stats-grid'>
+        <div class='stat-card'>
+            <div class='stat-icon'>👥</div>
+            <div class='stat-info'>
+                <h3>{{ total_students }}</h3>
+                <p>Total Students</p>
+            </div>
+        </div>
+        <div class='stat-card'>
+            <div class='stat-icon'>📋</div>
+            <div class='stat-info'>
+                <h3>{{ total_complaints }}</h3>
+                <p>Total Complaints</p>
+            </div>
+        </div>
+        <div class='stat-card'>
+            <div class='stat-icon'>⏳</div>
+            <div class='stat-info'>
+                <h3>{{ pending_complaints }}</h3>
+                <p>Pending Complaints</p>
+            </div>
+        </div>
+        <div class='stat-card'>
+            <div class='stat-icon'>🏠</div>
+            <div class='stat-info'>
+                <h3>{{ total_hostel_requests }}</h3>
+                <p>Hostel Requests</p>
+            </div>
+        </div>
+        <div class='stat-card'>
+            <div class='stat-icon'>⏳</div>
+            <div class='stat-info'>
+                <h3>{{ pending_hostel }}</h3>
+                <p>Pending Hostel</p>
+            </div>
+        </div>
+        <div class='stat-card'>
+            <div class='stat-icon'>🔍</div>
+            <div class='stat-info'>
+                <h3>{{ total_lost_found }}</h3>
+                <p>Lost & Found Items</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class='quick-actions'>
+        <h3>Quick Actions</h3>
+        <div class='action-buttons'>
+            <a href='{{ url_for('admin.complaints') }}' class='btn btn-primary'>Manage Complaints</a>
+            <a href='{{ url_for('admin.hostel_requests') }}' class='btn btn-secondary'>Hostel Requests</a>
+            <a href='{{ url_for('admin.lost_found') }}' class='btn btn-secondary'>Lost & Found</a>
+            <a href='{{ url_for('admin.students') }}' class='btn btn-secondary'>View Students</a>
+            <a href='{{ url_for('admin.notifications') }}' class='btn btn-secondary'>Send Notifications</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

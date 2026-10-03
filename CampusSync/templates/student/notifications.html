@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block title %}Notifications{% endblock %}
+
+{% block content %}
+<div class='page-container'>
+    <div class='page-header'>
+        <h2>Notifications</h2>
+        <p>View your system notifications</p>
+    </div>
+    
+    <div class='table-card'>
+        {% if notifications %}
+        <div class='table-responsive'>
+            <table class='data-table'>
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Message</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for notification in notifications %}
+                    <tr class='{% if not notification.is_read %}unread{% endif %}'>
+                        <td>{{ notification.title }}</td>
+                        <td>{{ notification.message }}</td>
+                        <td>{{ notification.created_at.strftime('%Y-%m-%d %H:%M') if notification.created_at else 'N/A' }}</td>
+                        <td>
+                            <span class='status-badge {% if notification.is_read %}status-read{% else %}status-unread{% endif %}'>
+                                {% if notification.is_read %}Read{% else %}Unread{% endif %}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class='empty-state'>No notifications yet.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

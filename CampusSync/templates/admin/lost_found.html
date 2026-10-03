@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block title %}Lost & Found{% endblock %}
+
+{% block content %}
+<div class='page-container'>
+    <div class='page-header'>
+        <h2>Lost & Found Management</h2>
+        <p>View all lost and found reports</p>
+    </div>
+    
+    <div class='table-card'>
+        {% if items %}
+        <div class='table-responsive'>
+            <table class='data-table'>
+                <thead>
+                    <tr>
+                        <th>Item ID</th>
+                        <th>Student</th>
+                        <th>Item Name</th>
+                        <th>Type</th>
+                        <th>Location</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>Claimed By</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td>{{ item.item_id }}</td>
+                        <td>{{ item.student.full_name if item.student else 'N/A' }}</td>
+                        <td>{{ item.item_name }}</td>
+                        <td><span class='status-badge status-{{ item.item_type.lower() }}'>{{ item.item_type }}</span></td>
+                        <td>{{ item.location }}</td>
+                        <td>{{ item.date }}</td>
+                        <td><span class='status-badge status-{{ item.status.lower() }}'>{{ item.status }}</span></td>
+                        <td>{{ item.claimant.full_name if item.claimant else '-' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class='empty-state'>No lost & found reports found.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

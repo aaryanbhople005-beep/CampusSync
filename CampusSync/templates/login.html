@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}Login{% endblock %}
+
+{% block login_content %}
+<div class='login-container'>
+    <div class='login-card'>
+        <div class='login-header'>
+            <h1>CampusSync</h1>
+            <p>Integrated University Service Management System</p>
+        </div>
+
+        <form method='POST' action='{{ url_for('auth.login') }}' class='login-form' novalidate>
+            <div class='form-group'>
+                <label for='username'>Username <span class='required'>*</span></label>
+                <input type='text' id='username' name='username' placeholder='Enter username'
+                       value='{{ username|default('') }}' autocomplete='username'>
+            </div>
+
+            <div class='form-group'>
+                <label for='password'>Password <span class='required'>*</span></label>
+                <input type='password' id='password' name='password' placeholder='Enter password'
+                       autocomplete='current-password'>
+            </div>
+
+            <button type='submit' class='btn btn-primary btn-block'>Login</button>
+        </form>
+
+        <div class='demo-accounts'>
+            <h3>Demo Accounts</h3>
+            <table class='demo-table'>
+                <tr><th>Role</th><th>Username</th><th>Password</th></tr>
+                <tr><td>Student</td><td><code>student</code></td><td><code>student123</code></td></tr>
+                <tr><td>Administrator</td><td><code>admin</code></td><td><code>admin123</code></td></tr>
+                <tr><td>Hostel Warden</td><td><code>warden</code></td><td><code>warden123</code></td></tr>
+                <tr><td>Department Staff</td><td><code>staff</code></td><td><code>staff123</code></td></tr>
+                <tr><td>Lost &amp; Found Staff</td><td><code>lostfound</code></td><td><code>lostfound123</code></td></tr>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

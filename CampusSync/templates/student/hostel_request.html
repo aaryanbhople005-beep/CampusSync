@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block title %}Hostel Request{% endblock %}
+
+{% block content %}
+<div class='page-container'>
+    <div class='page-header'>
+        <h2>Hostel Request</h2>
+        <p>Submit a new hostel accommodation request</p>
+    </div>
+    
+    <form method='POST' class='form-card' style='margin-bottom: 2rem;'>
+        <div class='form-group'>
+            <label for='hostel_name'>Hostel Name <span class='required'>*</span></label>
+            <select id='hostel_name' name='hostel_name' required>
+                <option value=''>Select a hostel</option>
+                {% for hostel in hostels %}
+                <option value='{{ hostel }}'>{{ hostel }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class='form-group'>
+            <label for='room_preference'>Room Preference <span class='required'>*</span></label>
+            <select id='room_preference' name='room_preference' required>
+                <option value=''>Select room type</option>
+                {% for room in room_types %}
+                <option value='{{ room }}'>{{ room }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class='form-group'>
+            <label for='reason'>Reason <span class='required'>*</span></label>
+            <textarea id='reason' name='reason' placeholder='Explain why you need hostel accommodation...' required rows='4' maxlength='1000'></textarea>
+        </div>
+        
+        <button type='submit' class='btn btn-primary'>Submit Request</button>
+    </form>
+    
+    <div class='table-card'>
+        <h3>Your Hostel Requests</h3>
+        {% if requests %}
+        <div class='table-responsive'>
+            <table class='data-table'>
+                <thead>
+                    <tr>
+                        <th>Request ID</th>
+                        <th>Hostel</th>
+                        <th>Room Preference</th>
+                        <th>Reason</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for req in requests %}
+                    <tr>
+                        <td>{{ req.request_id }}</td>
+                        <td>{{ req.hostel_name }}</td>
+                        <td>{{ req.room_preference }}</td>
+                        <td>{{ req.reason[:50] }}{% if req.reason|length > 50 %}...{% endif %}</td>
+                        <td><span class='status-badge status-{{ req.status.lower() }}'>{{ req.status }}</span></td>
+                        <td>{{ req.created_at.strftime('%Y-%m-%d') if req.created_at else 'N/A' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class='empty-state'>No hostel requests found.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

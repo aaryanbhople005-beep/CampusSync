@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block title %}Hostel Requests{% endblock %}
+
+{% block content %}
+<div class='page-container'>
+    <div class='page-header'>
+        <h2>Hostel Requests</h2>
+        <p>Manage student hostel accommodation requests</p>
+    </div>
+    
+    <div class='table-card'>
+        {% if requests %}
+        <div class='table-responsive'>
+            <table class='data-table'>
+                <thead>
+                    <tr>
+                        <th>Request ID</th>
+                        <th>Student</th>
+                        <th>Hostel</th>
+                        <th>Room Preference</th>
+                        <th>Reason</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for req in requests %}
+                    <tr>
+                        <td>{{ req.request_id }}</td>
+                        <td>{{ req.student.full_name if req.student else 'N/A' }}</td>
+                        <td>{{ req.hostel_name }}</td>
+                        <td>{{ req.room_preference }}</td>
+                        <td>{{ req.reason[:50] }}{% if req.reason|length > 50 %}...{% endif %}</td>
+                        <td><span class='status-badge status-{{ req.status.lower() }}'>{{ req.status }}</span></td>
+                        <td>{{ req.created_at.strftime('%Y-%m-%d') if req.created_at else 'N/A' }}</td>
+                        <td>
+                            <form method='POST' action='{{ url_for('admin.update_hostel_status') }}' class='status-form'>
+                                <input type='hidden' name='request_id' value='{{ req.request_id }}'>
+                                <select name='status' onchange='this.form.submit()' class='status-select'>
+                                    <option value='Pending' {% if req.status == 'Pending' %}selected{% endif %}>Pending</option>
+                                    <option value='Approved' {% if req.status == 'Approved' %}selected{% endif %}>Approved</option>
+                                    <option value='Rejected' {% if req.status == 'Rejected' %}selected{% endif %}>Rejected</option>
+                                </select>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class='empty-state'>No hostel requests found.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

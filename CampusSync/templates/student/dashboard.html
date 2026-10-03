@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class='dashboard'>
+    <div class='dashboard-header'>
+        <h2>Welcome, {{ user.full_name }}</h2>
+        <p>Student ID: {{ user.username }} | {{ user.email }}</p>
+    </div>
+    
+    <div class='stats-grid'>
+        <div class='stat-card'>
+            <div class='stat-icon'>📋</div>
+            <div class='stat-info'>
+                <h3>{{ complaints_count }}</h3>
+                <p>Complaints</p>
+            </div>
+        </div>
+        <div class='stat-card'>
+            <div class='stat-icon'>🏠</div>
+            <div class='stat-info'>
+                <h3>{{ hostel_count }}</h3>
+                <p>Hostel Requests</p>
+            </div>
+        </div>
+        <div class='stat-card'>
+            <div class='stat-icon'>🔍</div>
+            <div class='stat-info'>
+                <h3>{{ lost_found_count }}</h3>
+                <p>Lost & Found Reports</p>
+            </div>
+        </div>
+        <div class='stat-card'>
+            <div class='stat-icon'>🔔</div>
+            <div class='stat-info'>
+                <h3>{{ unread_notifications }}</h3>
+                <p>Unread Notifications</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class='quick-actions'>
+        <h3>Quick Actions</h3>
+        <div class='action-buttons'>
+            <a href='{{ url_for('student.register_complaint') }}' class='btn btn-primary'>Register Complaint</a>
+            <a href='{{ url_for('student.hostel_request') }}' class='btn btn-secondary'>Hostel Request</a>
+            <a href='{{ url_for('student.lost_found') }}' class='btn btn-secondary'>Report Lost/Found</a>
+            <a href='{{ url_for('student.notifications') }}' class='btn btn-secondary'>View Notifications</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

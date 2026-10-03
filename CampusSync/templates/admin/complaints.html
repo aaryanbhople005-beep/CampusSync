@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Complaints{% endblock %}
+
+{% block content %}
+<div class='page-container'>
+    <div class='page-header'>
+        <h2>Manage Complaints</h2>
+        <p>View and update complaint statuses</p>
+    </div>
+    
+    <div class='table-card'>
+        {% if complaints %}
+        <div class='table-responsive'>
+            <table class='data-table'>
+                <thead>
+                    <tr>
+                        <th>Complaint ID</th>
+                        <th>Student</th>
+                        <th>Title</th>
+                        <th>Category</th>
+                        <th>Status</th>
+                        <th>Date Submitted</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for complaint in complaints %}
+                    <tr>
+                        <td>{{ complaint.complaint_id }}</td>
+                        <td>{{ complaint.student.full_name if complaint.student else 'N/A' }}</td>
+                        <td>{{ complaint.title }}</td>
+                        <td>{{ complaint.category }}</td>
+                        <td><span class='status-badge status-{{ complaint.status.lower().replace(' ', '-') }}'>{{ complaint.status }}</span></td>
+                        <td>{{ complaint.created_at.strftime('%Y-%m-%d') if complaint.created_at else 'N/A' }}</td>
+                        <td>
+                            <form method='POST' action='{{ url_for('admin.update_complaint_status') }}' class='status-form'>
+                                <input type='hidden' name='complaint_id' value='{{ complaint.complaint_id }}'>
+                                <select name='status' onchange='this.form.submit()' class='status-select'>
+                                    <option value='Submitted' {% if complaint.status == 'Submitted' %}selected{% endif %}>Submitted</option>
+                                    <option value='Under Review' {% if complaint.status == 'Under Review' %}selected{% endif %}>Under Review</option>
+                                    <option value='In Progress' {% if complaint.status == 'In Progress' %}selected{% endif %}>In Progress</option>
+                                    <option value='Resolved' {% if complaint.status == 'Resolved' %}selected{% endif %}>Resolved</option>
+                                    <option value='Closed' {% if complaint.status == 'Closed' %}selected{% endif %}>Closed</option>
+                                </select>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class='empty-state'>No complaints found.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

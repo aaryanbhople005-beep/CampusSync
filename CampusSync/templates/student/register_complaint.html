@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block title %}Register Complaint{% endblock %}
+
+{% block content %}
+<div class='page-container'>
+    <div class='page-header'>
+        <h2>Register Complaint</h2>
+        <p>Submit a new complaint for review</p>
+    </div>
+    
+    <form method='POST' class='form-card'>
+        <div class='form-group'>
+            <label for='title'>Complaint Title <span class='required'>*</span></label>
+            <input type='text' id='title' name='title' placeholder='Enter complaint title' required maxlength='200'>
+        </div>
+        
+        <div class='form-group'>
+            <label for='category'>Category <span class='required'>*</span></label>
+            <select id='category' name='category' required>
+                <option value=''>Select a category</option>
+                {% for cat in categories %}
+                <option value='{{ cat }}'>{{ cat }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class='form-group'>
+            <label for='description'>Description <span class='required'>*</span></label>
+            <textarea id='description' name='description' placeholder='Describe the issue in detail...' required rows='6' maxlength='2000'></textarea>
+        </div>
+        
+        <button type='submit' class='btn btn-primary'>Submit Complaint</button>
+    </form>
+</div>
+{% endblock %}

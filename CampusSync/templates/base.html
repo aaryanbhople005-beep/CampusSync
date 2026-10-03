@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <title>{% block title %}CampusSync{% endblock %} - Integrated University Service Management System</title>
+    <link rel='stylesheet' href='{{ url_for('static', filename='css/style.css') }}'>
+</head>
+<body data-guard-exit="{{ 'true' if request.endpoint in ('student.dashboard', 'warden.dashboard', 'staff.dashboard', 'lostfound.dashboard', 'admin.dashboard') else 'false' }}" data-logout-url="{{ url_for('auth.logout') }}">
+    <div class='app-container'>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class='flash-messages'>
+                    {% for category, message in messages %}
+                        <div class='flash flash-{{ category }}'>{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% if session.user_id %}
+        <header class='header'>
+            <div class='header-left'>
+                <h1 class='logo'>CampusSync</h1>
+                <span class='role-badge {{ session.role }}'>{{ session.role }}</span>
+            </div>
+            <div class='header-right'>
+                <a href='{{ url_for('student.notifications') if session.role == 'student' else url_for('admin.notifications') if session.role == 'admin' else '#' }}'
+                   class='notification-indicator {% if unread_notifications|default(0) > 0 %}has-unread{% endif %}'>
+                    <span class='bell'>🔔</span>
+                    {% if unread_notifications|default(0) > 0 %}
+                        <span class='badge'>{{ unread_notifications }}</span>
+                    {% endif %}
+                </a>
+                <span class='user-info'>{{ session.full_name }} ({{ session.username }})</span>
+                <a href='{{ url_for('auth.logout') }}' class='btn btn-logout'>Logout</a>
+            </div>
+        </header>
+
+        <div class='main-container'>
+            <nav class='sidebar'>
+                <ul class='nav-menu'>
+                    {% if session.role == 'student' %}
+                    <li><a href='{{ url_for('student.dashboard') }}' class='nav-link {% if request.endpoint == 'student.dashboard' %}active{% endif %}'>Dashboard</a></li>
+                    <li><a href='{{ url_for('student.register_complaint') }}' class='nav-link {% if request.endpoint == 'student.register_complaint' %}active{% endif %}'>Register Complaint</a></li>
+                    <li><a href='{{ url_for('student.track_complaint') }}' class='nav-link {% if request.endpoint in ('student.track_complaint', 'student.complaint_detail') %}active{% endif %}'>Track Complaint</a></li>
+                    <li><a href='{{ url_for('student.hostel') }}' class='nav-link {% if request.endpoint in ('student.hostel', 'student.hostel_request_detail') %}active{% endif %}'>My Hostel</a></li>
+                    <li><a href='{{ url_for('student.hostel_request') }}' class='nav-link {% if request.endpoint == 'student.hostel_request' %}active{% endif %}'>Hostel Requests</a></li>
+                    <li><a href='{{ url_for('student.lost_found') }}' class='nav-link {% if request.endpoint == 'student.lost_found' %}active{% endif %}'>Lost &amp; Found</a></li>
+                    <li><a href='{{ url_for('student.notifications') }}' class='nav-link {% if request.endpoint == 'student.notifications' %}active{% endif %}'>Notifications</a></li>
+
+                    {% elif session.role == 'warden' %}
+                    <li><a href='{{ url_for('warden.dashboard') }}' class='nav-link {% if request.endpoint == 'warden.dashboard' %}active{% endif %}'>Dashboard</a></li>
+                    <li><a href='{{ url_for('warden.requests') }}' class='nav-link {% if request.endpoint in ('warden.requests', 'warden.request_detail') %}active{% endif %}'>Hostel Requests</a></li>
+                    <li><a href='{{ url_for('warden.notices') }}' class='nav-link {% if request.endpoint == 'warden.notices' %}active{% endif %}'>Hostel Notices</a></li>
+
+                    {% elif session.role == 'staff' %}
+                    <li><a href='{{ url_for('staff.dashboard') }}' class='nav-link {% if request.endpoint == 'staff.dashboard' %}active{% endif %}'>Dashboard</a></li>
+                    <li><a href='{{ url_for('staff.complaints') }}' class='nav-link {% if request.endpoint in ('staff.complaints', 'staff.complaint_detail') %}active{% endif %}'>My Complaints</a></li>
+
+                    {% elif session.role == 'lostfound' %}
+                    <li><a href='{{ url_for('lostfound.dashboard') }}' class='nav-link {% if request.endpoint == 'lostfound.dashboard' %}active{% endif %}'>Dashboard</a></li>
+                    <li><a href='{{ url_for('lostfound.claims') }}' class='nav-link {% if request.endpoint == 'lostfound.claims' %}active{% endif %}'>Claim Requests</a></li>
+                    <li><a href='{{ url_for('lostfound.items') }}' class='nav-link {% if request.endpoint == 'lostfound.items' %}active{% endif %}'>Found Items</a></li>
+
+                    {% else %}
+                    <li><a href='{{ url_for('admin.dashboard') }}' class='nav-link {% if request.endpoint == 'admin.dashboard' %}active{% endif %}'>Dashboard</a></li>
+                    <li><a href='{{ url_for('admin.complaints') }}' class='nav-link {% if request.endpoint in ('admin.complaints', 'admin.complaint_detail') %}active{% endif %}'>Complaints</a></li>
+                    <li><a href='{{ url_for('admin.hostel_requests') }}' class='nav-link {% if request.endpoint == 'admin.hostel_requests' %}active{% endif %}'>Hostel Requests</a></li>
+                    <li><a href='{{ url_for('admin.lost_found') }}' class='nav-link {% if request.endpoint == 'admin.lost_found' %}active{% endif %}'>Lost &amp; Found</a></li>
+                    <li><a href='{{ url_for('admin.students') }}' class='nav-link {% if request.endpoint == 'admin.students' %}active{% endif %}'>Users</a></li>
+                    <li><a href='{{ url_for('admin.departments') }}' class='nav-link {% if request.endpoint == 'admin.departments' %}active{% endif %}'>Departments</a></li>
+                    <li><a href='{{ url_for('admin.categories') }}' class='nav-link {% if request.endpoint == 'admin.categories' %}active{% endif %}'>Categories</a></li>
+                    <li><a href='{{ url_for('admin.blocks') }}' class='nav-link {% if request.endpoint == 'admin.blocks' %}active{% endif %}'>Hostel Blocks</a></li>
+                    <li><a href='{{ url_for('admin.audit_logs') }}' class='nav-link {% if request.endpoint == 'admin.audit_logs' %}active{% endif %}'>Audit Logs</a></li>
+                    <li><a href='{{ url_for('admin.settings') }}' class='nav-link {% if request.endpoint == 'admin.settings' %}active{% endif %}'>Settings</a></li>
+                    <li><a href='{{ url_for('admin.notifications') }}' class='nav-link {% if request.endpoint == 'admin.notifications' %}active{% endif %}'>Notifications</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+
+            <main class='content'>
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+        {% else %}
+            {% block login_content %}{% endblock %}
+        {% endif %}
+    </div>
+    <script src='{{ url_for('static', filename='js/main.js') }}'></script>
+</body>
+</html>
