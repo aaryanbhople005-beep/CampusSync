@@ -6,27 +6,31 @@
 <div class='page-container'>
     <div class='page-header'>
         <h2>Track Complaint</h2>
-        <p>View and track your complaint status</p>
+        <p>View and track the status of your complaints</p>
     </div>
-    
+
     <div class='form-card' style='margin-bottom: 2rem;'>
         <h3>Search by Complaint ID</h3>
-        <form method='POST' class='search-form'>
+        <form method='POST' class='search-form' novalidate>
             <div class='form-row'>
-                <div class='form-group' style='flex: 1;'>
+                <div class='form-group' style='flex:1;'>
                     <label for='complaint_id'>Complaint ID</label>
-                    <input type='text' id='complaint_id' name='complaint_id' placeholder='Enter Complaint ID (e.g., CMP-2024-001)' required>
+                    <input type='text' id='complaint_id' name='complaint_id'
+                           placeholder='e.g. CMP-2024-001'>
                 </div>
-                <div class='form-group' style='display: flex; align-items: flex-end;'>
+                <div class='form-group' style='display:flex;align-items:flex-end;'>
                     <button type='submit' class='btn btn-primary'>Track</button>
                 </div>
             </div>
         </form>
     </div>
-    
+
     {% if complaint_detail %}
     <div class='complaint-detail-card'>
-        <h3>Complaint Details</h3>
+        <div class='detail-card-header'>
+            <h3>Complaint Details</h3>
+            <a href='{{ url_for('student.complaint_detail', complaint_pk=complaint_detail.id) }}' class='btn btn-secondary btn-sm'>Full history</a>
+        </div>
         <div class='detail-grid'>
             <div class='detail-item'>
                 <span class='detail-label'>Complaint ID</span>
@@ -41,27 +45,46 @@
                 <span class='detail-value'>{{ complaint_detail.category }}</span>
             </div>
             <div class='detail-item'>
-                <span class='detail-label'>Status</span>
-                <span class='detail-value status-badge status-{{ complaint_detail.status.lower().replace(' ', '-') }}'>{{ complaint_detail.status }}</span>
+                <span class='detail-label'>Department</span>
+                <span class='detail-value'>{{ complaint_detail.department.name if complaint_detail.department else 'Unassigned' }}</span>
             </div>
+            <div class='detail-item'>
+                <span class='detail-label'>Status</span>
+                <span class='detail-value'><span class='status-badge status-{{ complaint_detail.status|lower|replace(' ', '-') }}'>{{ complaint_detail.status }}</span></span>
+            </div>
+            <div class='detail-item'>
+                <span class='detail-label'>Submitted On</span>
+                <span class='detail-value'>{{ complaint_detail.created_at.strftime('%Y-%m-%d %H:%M') if complaint_detail.created_at else 'N/A' }}</span>
+            </div>
+            <div class='detail-item'>
+                <span class='detail-label'>Last Updated</span>
+                <span class='detail-value'>{{ complaint_detail.updated_at.strftime('%Y-%m-%d %H:%M') if complaint_detail.updated_at else 'N/A' }}</span>
+            </div>
+            {% if complaint_detail.sla_due_at and complaint_detail.status in open_statuses %}
+            <div class='detail-item'>
+                <span class='detail-label'>SLA Due</span>
+                <span class='detail-value'>
+                    {{ complaint_detail.sla_due_at.strftime('%Y-%m-%d %H:%M') }}
+                    {% if complaint_detail.sla_breached %}<span class='status-badge status-closed'>BREACHED</span>{% endif %}
+                </span>
+            </div>
+            {% endif %}
             <div class='detail-item full-width'>
                 <span class='detail-label'>Description</span>
                 <p class='detail-value'>{{ complaint_detail.description }}</p>
             </div>
-            <div class='detail-item'>
-                <span class='detail-label'>Submitted On</span>
-                <span class='detail-value'>{{ complaint_detail.created_at.strftime('%Y-%m-%d') if complaint_detail.created_at else 'N/A' }}</span>
+            {% if complaint_detail.resolution_notes %}
+            <div class='detail-item full-width'>
+                <span class='detail-label'>Resolution Notes</span>
+                <p class='detail-value'>{{ complaint_detail.resolution_notes }}</p>
             </div>
-            <div class='detail-item'>
-                <span class='detail-label'>Last Updated</span>
-                <span class='detail-value'>{{ complaint_detail.updated_at.strftime('%Y-%m-%d') if complaint_detail.updated_at else 'N/A' }}</span>
-            </div>
+            {% endif %}
         </div>
     </div>
     {% endif %}
-    
+
     <div class='table-card'>
-        <h3>Your Complaints</h3>
+        <h3>My Complaints</h3>
         {% if complaints %}
         <div class='table-responsive'>
             <table class='data-table'>
@@ -71,7 +94,8 @@
                         <th>Title</th>
                         <th>Category</th>
                         <th>Status</th>
-                        <th>Date Submitted</th>
+                        <th>Last Updated</th>
+                        <th></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -80,8 +104,9 @@
                         <td>{{ complaint.complaint_id }}</td>
                         <td>{{ complaint.title }}</td>
                         <td>{{ complaint.category }}</td>
-                        <td><span class='status-badge status-{{ complaint.status.lower().replace(' ', '-') }}'>{{ complaint.status }}</span></td>
-                        <td>{{ complaint.created_at.strftime('%Y-%m-%d') if complaint.created_at else 'N/A' }}</td>
+                        <td><span class='status-badge status-{{ complaint.status|lower|replace(' ', '-') }}'>{{ complaint.status }}</span></td>
+                        <td>{{ complaint.updated_at.strftime('%Y-%m-%d') if complaint.updated_at else 'N/A' }}</td>
+                        <td><a href='{{ url_for('student.complaint_detail', complaint_pk=complaint.id) }}' class='btn btn-secondary btn-sm'>View</a></td>
                     </tr>
                     {% endfor %}
                 </tbody>

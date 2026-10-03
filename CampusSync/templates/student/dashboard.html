@@ -6,29 +6,29 @@
 <div class='dashboard'>
     <div class='dashboard-header'>
         <h2>Welcome, {{ user.full_name }}</h2>
-        <p>Student ID: {{ user.username }} | {{ user.email }}</p>
+        <p>{{ user.role_label }} | {{ user.username }} | {{ user.email }}</p>
     </div>
-    
+
     <div class='stats-grid'>
         <div class='stat-card'>
             <div class='stat-icon'>📋</div>
             <div class='stat-info'>
                 <h3>{{ complaints_count }}</h3>
-                <p>Complaints</p>
+                <p>Complaints ({{ open_complaints }} active)</p>
             </div>
         </div>
         <div class='stat-card'>
             <div class='stat-icon'>🏠</div>
             <div class='stat-info'>
                 <h3>{{ hostel_count }}</h3>
-                <p>Hostel Requests</p>
+                <p>Hostel Requests ({{ pending_hostel }} pending)</p>
             </div>
         </div>
         <div class='stat-card'>
             <div class='stat-icon'>🔍</div>
             <div class='stat-info'>
                 <h3>{{ lost_found_count }}</h3>
-                <p>Lost & Found Reports</p>
+                <p>Lost &amp; Found Reports</p>
             </div>
         </div>
         <div class='stat-card'>
@@ -39,15 +39,90 @@
             </div>
         </div>
     </div>
-    
+
     <div class='quick-actions'>
         <h3>Quick Actions</h3>
         <div class='action-buttons'>
             <a href='{{ url_for('student.register_complaint') }}' class='btn btn-primary'>Register Complaint</a>
-            <a href='{{ url_for('student.hostel_request') }}' class='btn btn-secondary'>Hostel Request</a>
-            <a href='{{ url_for('student.lost_found') }}' class='btn btn-secondary'>Report Lost/Found</a>
-            <a href='{{ url_for('student.notifications') }}' class='btn btn-secondary'>View Notifications</a>
+            <a href='{{ url_for('student.hostel_request') }}' class='btn btn-secondary'>New Hostel Request</a>
+            <a href='{{ url_for('student.lost_found') }}' class='btn btn-secondary'>Lost &amp; Found</a>
+            <a href='{{ url_for('student.notifications') }}' class='btn btn-secondary'>Notifications</a>
         </div>
     </div>
+
+    <div class='two-column'>
+        <div class='table-card'>
+            <h3>Recent Complaints</h3>
+            {% if recent_complaints %}
+            <div class='table-responsive'>
+                <table class='data-table'>
+                    <thead>
+                        <tr><th>ID</th><th>Title</th><th>Status</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for c in recent_complaints %}
+                        <tr>
+                            <td><a href='{{ url_for('student.complaint_detail', complaint_pk=c.id) }}'>{{ c.complaint_id }}</a></td>
+                            <td>{{ c.title }}</td>
+                            <td><span class='status-badge status-{{ c.status|lower|replace(' ', '-') }}'>{{ c.status }}</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class='empty-state'>You have not registered any complaints yet.</p>
+            {% endif %}
+        </div>
+
+        <div class='table-card'>
+            <h3>My Hostel</h3>
+            {% if block %}
+                <div class='detail-grid'>
+                    <div class='detail-item'>
+                        <span class='detail-label'>Hostel Block</span>
+                        <span class='detail-value'>{{ block.name }}</span>
+                    </div>
+                    <div class='detail-item'>
+                        <span class='detail-label'>Room</span>
+                        <span class='detail-value'>{{ allocation.room_number }}{% if allocation.bed_number %} (Bed {{ allocation.bed_number }}){% endif %}</span>
+                    </div>
+                </div>
+            {% else %}
+                <p class='empty-state'>No hostel allocation is recorded for you.</p>
+            {% endif %}
+
+            {% if notices %}
+            <h3 style='margin-top:1.25rem;'>Latest Notices</h3>
+            <ul class='notice-list'>
+                {% for n in notices %}
+                <li><strong>{{ n.title }}</strong><br><span class='muted'>{{ n.message[:90] }}{% if n.message|length > 90 %}...{% endif %}</span></li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if reopenable %}
+    <div class='table-card'>
+        <h3>Complaints You Can Reopen</h3>
+        <p class='muted'>These complaints are within your reopening window.</p>
+        <div class='table-responsive'>
+            <table class='data-table'>
+                <thead><tr><th>ID</th><th>Title</th><th>Status</th><th></th></tr></thead>
+                <tbody>
+                    {% for c in reopenable %}
+                    <tr>
+                        <td>{{ c.complaint_id }}</td>
+                        <td>{{ c.title }}</td>
+                        <td><span class='status-badge status-{{ c.status|lower|replace(' ', '-') }}'>{{ c.status }}</span></td>
+                        <td><a href='{{ url_for('student.complaint_detail', complaint_pk=c.id) }}' class='btn btn-secondary btn-sm'>Reopen</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}
