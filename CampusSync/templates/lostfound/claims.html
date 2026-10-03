@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+
+{% block title %}Claim Requests{% endblock %}
+
+{% block content %}
+<div class='page-container'>
+    <div class='page-header'>
+        <h2>Claim Requests</h2>
+        <p>Review claim requests submitted by students</p>
+    </div>
+
+    <div class='tabs'>
+        {% for s in statuses %}
+        <a href='{{ url_for('lostfound.claims', status=s) }}'
+           class='tab-btn {% if filters.status == s %}active{% endif %}'>{{ s }}</a>
+        {% endfor %}
+    </div>
+
+    <div class='table-card'>
+        <h3>{{ filters.status }} Claims ({{ claims|length }})</h3>
+        {% if claims %}
+            {% for claim in claims %}
+            <div class='claim-card'>
+                <div class='claim-header'>
+                    <div>
+                        <strong>Claim #{{ claim.id }}</strong> · Item {{ claim.item.item_id }} — {{ claim.item.item_name }}
+                        <br>
+                        <span class='muted'>
+                            Claimant: {{ claim.student.full_name if claim.student else 'N/A' }}
+                            ({{ claim.student.username if claim.student else '' }})
+                            · Submitted {{ claim.created_at.strftime('%Y-%m-%d %H:%M') if claim.created_at else 'N/A' }}
+                        </span>
+                    </div>
+                    <span class='status-badge status-{{ claim.status|lower }}'>{{ claim.status }}</span>
+                </div>
+
+                <div class='claim-body'>
+                    <div class='detail-grid'>
+                        <div class='detail-item'>
+                            <span class='detail-label'>Item Description</span>
+                            <span class='detail-value'>{{ claim.item.description }}</span>
+                        </div>
+                        <div class='detail-item'>
+                            <span class='detail-label'>Found At</span>
+                            <span class='detail-value'>{{ claim.item.location }} · {{ claim.item.date }}</span>
+                        </div>
+                        <div class='detail-item full-width'>
+                            <span class='detail-label'>Identifying Information Given by Claimant</span>
+                            <p class='detail-value note-box'>{{ claim.identifying_info }}</p>
+                        </div>
+                        {% if claim.review_note %}
+                        <div class='detail-item full-width'>
+                            <span class='detail-label'>Review Note</span>
+                            <p class='detail-value note-box'>{{ claim.review_note }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if claim.status == 'PENDING' %}
+                <form method='POST' action='{{ url_for('lostfound.review_claim', claim_pk=claim.id) }}' class='claim-actions' novalidate>
+                    <div class='form-group'>
+                        <label for='note_{{ claim.id }}'>Review Note (required to reject)</label>
+                        <input type='text' id='note_{{ claim.id }}' name='review_note' maxlength='500'
+                               placeholder='Optional note; required when rejecting'>
+                    </div>
+                    <div class='action-buttons'>
+                        <button type='submit' name='action' value='approve' class='btn btn-primary'>Approve Claim</button>
+                        <button type='submit' name='action' value='reject' class='btn btn-danger'>Reject Claim</button>
+                    </div>
+                </form>
+                {% else %}
+                <p class='muted'>Reviewed by {{ claim.reviewed_by.full_name if claim.reviewed_by else 'staff' }}
+                   on {{ claim.reviewed_at.strftime('%Y-%m-%d %H:%M') if claim.reviewed_at else 'N/A' }}</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+        {% else %}
+        <p class='empty-state'>No {{ filters.status|lower }} claims.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

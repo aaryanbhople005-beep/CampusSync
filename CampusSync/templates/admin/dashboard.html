@@ -6,62 +6,186 @@
 <div class='dashboard'>
     <div class='dashboard-header'>
         <h2>Admin Dashboard</h2>
-        <p>Welcome, {{ session.full_name }} | System Overview</p>
+        <p>{{ session.full_name }} · System-wide overview and analytics</p>
     </div>
-    
+
+    <form method='GET' class='form-card' novalidate>
+        <div class='form-row'>
+            <div class='form-group'>
+                <label for='from'>Date From</label>
+                <input type='date' id='from' name='from' value='{{ filters['from'] }}'>
+            </div>
+            <div class='form-group'>
+                <label for='to'>Date To</label>
+                <input type='date' id='to' name='to' value='{{ filters['to'] }}'>
+            </div>
+            <div class='form-group'>
+                <label for='status'>Status</label>
+                <select id='status' name='status'>
+                    <option value=''>All statuses</option>
+                    {% for s in ['OPEN', 'IN PROGRESS', 'RESOLVED', 'CLOSED', 'REOPENED'] %}
+                    <option value='{{ s }}' {% if filters['status'] == s %}selected{% endif %}>{{ s }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class='form-group'>
+                <label for='department'>Department</label>
+                <select id='department' name='department'>
+                    <option value=''>All departments</option>
+                    {% for d in departments %}
+                    <option value='{{ d.id }}' {% if filters['department'] == d.id|string %}selected{% endif %}>{{ d.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class='form-group'>
+                <label for='block'>Hostel Block</label>
+                <select id='block' name='block'>
+                    <option value=''>All blocks</option>
+                    {% for b in blocks %}
+                    <option value='{{ b.id }}' {% if filters['block'] == b.id|string %}selected{% endif %}>{{ b.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class='form-group' style='display:flex;align-items:flex-end;gap:.5rem;'>
+                <button type='submit' class='btn btn-primary'>Apply</button>
+                <a href='{{ url_for('admin.dashboard') }}' class='btn btn-secondary'>Reset</a>
+            </div>
+        </div>
+    </form>
+
     <div class='stats-grid'>
         <div class='stat-card'>
             <div class='stat-icon'>👥</div>
-            <div class='stat-info'>
-                <h3>{{ total_students }}</h3>
-                <p>Total Students</p>
-            </div>
+            <div class='stat-info'><h3>{{ total_students }}</h3><p>Active Students</p></div>
         </div>
         <div class='stat-card'>
             <div class='stat-icon'>📋</div>
-            <div class='stat-info'>
-                <h3>{{ total_complaints }}</h3>
-                <p>Total Complaints</p>
-            </div>
-        </div>
-        <div class='stat-card'>
-            <div class='stat-icon'>⏳</div>
-            <div class='stat-info'>
-                <h3>{{ pending_complaints }}</h3>
-                <p>Pending Complaints</p>
-            </div>
+            <div class='stat-info'><h3>{{ c.total }}</h3><p>Complaints</p></div>
         </div>
         <div class='stat-card'>
             <div class='stat-icon'>🏠</div>
-            <div class='stat-info'>
-                <h3>{{ total_hostel_requests }}</h3>
-                <p>Hostel Requests</p>
-            </div>
-        </div>
-        <div class='stat-card'>
-            <div class='stat-icon'>⏳</div>
-            <div class='stat-info'>
-                <h3>{{ pending_hostel }}</h3>
-                <p>Pending Hostel</p>
-            </div>
+            <div class='stat-info'><h3>{{ h.total }}</h3><p>Hostel Requests</p></div>
         </div>
         <div class='stat-card'>
             <div class='stat-icon'>🔍</div>
-            <div class='stat-info'>
-                <h3>{{ total_lost_found }}</h3>
-                <p>Lost & Found Items</p>
-            </div>
+            <div class='stat-info'><h3>{{ l.total }}</h3><p>Lost &amp; Found Items</p></div>
         </div>
     </div>
-    
-    <div class='quick-actions'>
-        <h3>Quick Actions</h3>
-        <div class='action-buttons'>
-            <a href='{{ url_for('admin.complaints') }}' class='btn btn-primary'>Manage Complaints</a>
-            <a href='{{ url_for('admin.hostel_requests') }}' class='btn btn-secondary'>Hostel Requests</a>
-            <a href='{{ url_for('admin.lost_found') }}' class='btn btn-secondary'>Lost & Found</a>
-            <a href='{{ url_for('admin.students') }}' class='btn btn-secondary'>View Students</a>
-            <a href='{{ url_for('admin.notifications') }}' class='btn btn-secondary'>Send Notifications</a>
+
+    {% if breached_complaints or retention_items %}
+    <div class='alert-box'>
+        {% if breached_complaints %}
+        <div><strong>SLA breaches:</strong> {{ breached_complaints|length }} complaint(s) exceeded the SLA threshold.</div>
+        {% endif %}
+        {% if retention_items %}
+        <div><strong>Old unclaimed items:</strong> {{ retention_items|length }} found item(s) need review.</div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <div class='two-column'>
+        <!-- Complaints analytics -->
+        <div class='table-card'>
+            <h3>Complaint Analytics</h3>
+            <div class='metric-list'>
+                <div class='metric'><span>Total</span><strong>{{ c.total }}</strong></div>
+                <div class='metric'><span>Open</span><strong>{{ c.open }}</strong></div>
+                <div class='metric'><span>Reopened</span><strong>{{ c.reopened }}</strong></div>
+                <div class='metric'><span>In Progress</span><strong>{{ c.in_progress }}</strong></div>
+                <div class='metric'><span>Resolved</span><strong>{{ c.resolved }}</strong></div>
+                <div class='metric'><span>Closed</span><strong>{{ c.closed }}</strong></div>
+                <div class='metric'><span>SLA Breached</span><strong>{{ c.sla_breached }}</strong></div>
+                <div class='metric'><span>Avg Resolution (hrs)</span><strong>{{ c.avg_resolution_hours }}</strong></div>
+            </div>
+
+            <h4 class='sub-heading'>Volume by Category</h4>
+            {% if c.by_category %}
+            <div class='bar-chart'>
+                {% for name, count in c.by_category.items()|sort %}
+                <div class='bar-row'>
+                    <span class='bar-label'>{{ name }}</span>
+                    <div class='bar-track'>
+                        <div class='bar-fill bar-generic' style='width: {{ (count / c.total * 100)|round(0, 'floor') if c.total else 0 }}%'></div>
+                    </div>
+                    <span class='bar-value'>{{ count }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class='empty-state'>No complaint data for this filter.</p>
+            {% endif %}
+
+            <h4 class='sub-heading'>Volume by Department</h4>
+            {% if c.by_department %}
+            <div class='bar-chart'>
+                {% for name, count in c.by_department.items()|sort %}
+                <div class='bar-row'>
+                    <span class='bar-label'>{{ name }}</span>
+                    <div class='bar-track'>
+                        <div class='bar-fill bar-department' style='width: {{ (count / c.total * 100)|round(0, 'floor') if c.total else 0 }}%'></div>
+                    </div>
+                    <span class='bar-value'>{{ count }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class='empty-state'>No department data for this filter.</p>
+            {% endif %}
+        </div>
+
+        <div class='stack'>
+            <!-- Hostel analytics -->
+            <div class='table-card'>
+                <h3>Hostel Analytics</h3>
+                <div class='metric-list'>
+                    <div class='metric'><span>Total Requests</span><strong>{{ h.total }}</strong></div>
+                    <div class='metric'><span>Pending</span><strong>{{ h.pending }}</strong></div>
+                    <div class='metric'><span>Approved</span><strong>{{ h.approved }}</strong></div>
+                    <div class='metric'><span>Rejected</span><strong>{{ h.rejected }}</strong></div>
+                    <div class='metric'><span>Clarification</span><strong>{{ h.clarification }}</strong></div>
+                    <div class='metric'><span>Completed</span><strong>{{ h.completed }}</strong></div>
+                </div>
+                {% if h.by_type %}
+                <h4 class='sub-heading'>Requests by Type</h4>
+                <div class='bar-chart'>
+                    {% for name, count in h.by_type.items()|sort %}
+                    <div class='bar-row'>
+                        <span class='bar-label'>{{ name }}</span>
+                        <div class='bar-track'>
+                            <div class='bar-fill bar-hostel' style='width: {{ (count / h.total * 100)|round(0, 'floor') if h.total else 0 }}%'></div>
+                        </div>
+                        <span class='bar-value'>{{ count }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Lost & found analytics -->
+            <div class='table-card'>
+                <h3>Lost &amp; Found Analytics</h3>
+                <div class='metric-list'>
+                    <div class='metric'><span>Total Reports</span><strong>{{ l.total }}</strong></div>
+                    <div class='metric'><span>Lost Items</span><strong>{{ l.lost }}</strong></div>
+                    <div class='metric'><span>Found Items</span><strong>{{ l.found }}</strong></div>
+                    <div class='metric'><span>Active Found</span><strong>{{ l.active_found }}</strong></div>
+                    <div class='metric'><span>Claimed</span><strong>{{ l.claimed }}</strong></div>
+                    <div class='metric'><span>Claim Rate (%)</span><strong>{{ l.claim_rate }}</strong></div>
+                    <div class='metric'><span>Retention Flagged</span><strong>{{ l.retention_flagged }}</strong></div>
+                </div>
+            </div>
+
+            <!-- Export -->
+            <div class='table-card'>
+                <h3>Export Reports (CSV)</h3>
+                <p class='muted'>Exports honour the filters currently applied on this page.</p>
+                <div class='action-buttons'>
+                    <a class='btn btn-primary' href='{{ url_for('admin.export', report='complaints', **filters) }}'>Export Complaints</a>
+                    <a class='btn btn-secondary' href='{{ url_for('admin.export', report='hostel', **filters) }}'>Export Hostel</a>
+                    <a class='btn btn-secondary' href='{{ url_for('admin.export', report='lostfound', **filters) }}'>Export Lost &amp; Found</a>
+                    <a class='btn btn-secondary' href='{{ url_for('admin.export', report='audit') }}'>Export Audit Log</a>
+                </div>
+            </div>
         </div>
     </div>
 </div>

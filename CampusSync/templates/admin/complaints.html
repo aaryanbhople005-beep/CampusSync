@@ -6,52 +6,80 @@
 <div class='page-container'>
     <div class='page-header'>
         <h2>Manage Complaints</h2>
-        <p>View and update complaint statuses</p>
+        <p>View all complaints and update their status</p>
     </div>
-    
+
+    <form method='GET' class='form-card' novalidate>
+        <div class='form-row'>
+            <div class='form-group'>
+                <label for='q'>Search</label>
+                <input type='text' id='q' name='q' value='{{ filters.q }}' placeholder='Complaint ID or title'>
+            </div>
+            <div class='form-group'>
+                <label for='status'>Status</label>
+                <select id='status' name='status'>
+                    <option value=''>All statuses</option>
+                    {% for s in statuses %}
+                    <option value='{{ s }}' {% if filters.status == s %}selected{% endif %}>{{ s }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class='form-group'>
+                <label for='department'>Department</label>
+                <select id='department' name='department'>
+                    <option value=''>All departments</option>
+                    {% for d in departments %}
+                    <option value='{{ d.id }}' {% if filters.department == d.id|string %}selected{% endif %}>{{ d.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class='form-group'>
+                <label for='category'>Category</label>
+                <select id='category' name='category'>
+                    <option value=''>All categories</option>
+                    {% for c in categories %}
+                    <option value='{{ c.id }}' {% if filters.category == c.id|string %}selected{% endif %}>{{ c.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class='form-group' style='display:flex;align-items:flex-end;'>
+                <button type='submit' class='btn btn-primary'>Filter</button>
+            </div>
+        </div>
+    </form>
+
     <div class='table-card'>
+        <h3>All Complaints ({{ complaints|length }})</h3>
         {% if complaints %}
         <div class='table-responsive'>
             <table class='data-table'>
                 <thead>
                     <tr>
-                        <th>Complaint ID</th>
-                        <th>Student</th>
-                        <th>Title</th>
-                        <th>Category</th>
-                        <th>Status</th>
-                        <th>Date Submitted</th>
-                        <th>Action</th>
+                        <th>Complaint ID</th><th>Student</th><th>Title</th><th>Category</th>
+                        <th>Department</th><th>Assigned To</th><th>Status</th><th>SLA</th>
+                        <th>Submitted</th><th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for complaint in complaints %}
-                    <tr>
+                    <tr class='{% if complaint.sla_breached %}row-alert{% endif %}'>
                         <td>{{ complaint.complaint_id }}</td>
                         <td>{{ complaint.student.full_name if complaint.student else 'N/A' }}</td>
                         <td>{{ complaint.title }}</td>
                         <td>{{ complaint.category }}</td>
-                        <td><span class='status-badge status-{{ complaint.status.lower().replace(' ', '-') }}'>{{ complaint.status }}</span></td>
+                        <td>{{ complaint.department.name if complaint.department else 'Unassigned' }}</td>
+                        <td>{{ complaint.assigned_to.full_name if complaint.assigned_to else 'Unassigned' }}</td>
+                        <td><span class='status-badge status-{{ complaint.status|lower|replace(' ', '-') }}'>{{ complaint.status }}</span></td>
+                        <td>{% if complaint.sla_breached %}<span class='status-badge status-closed'>BREACH</span>{% else %}—{% endif %}</td>
                         <td>{{ complaint.created_at.strftime('%Y-%m-%d') if complaint.created_at else 'N/A' }}</td>
-                        <td>
-                            <form method='POST' action='{{ url_for('admin.update_complaint_status') }}' class='status-form'>
-                                <input type='hidden' name='complaint_id' value='{{ complaint.complaint_id }}'>
-                                <select name='status' onchange='this.form.submit()' class='status-select'>
-                                    <option value='Submitted' {% if complaint.status == 'Submitted' %}selected{% endif %}>Submitted</option>
-                                    <option value='Under Review' {% if complaint.status == 'Under Review' %}selected{% endif %}>Under Review</option>
-                                    <option value='In Progress' {% if complaint.status == 'In Progress' %}selected{% endif %}>In Progress</option>
-                                    <option value='Resolved' {% if complaint.status == 'Resolved' %}selected{% endif %}>Resolved</option>
-                                    <option value='Closed' {% if complaint.status == 'Closed' %}selected{% endif %}>Closed</option>
-                                </select>
-                            </form>
-                        </td>
+                        <td><a href='{{ url_for('admin.complaint_detail', complaint_pk=complaint.id) }}' class='btn btn-secondary btn-sm'>Open</a></td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
         {% else %}
-        <p class='empty-state'>No complaints found.</p>
+        <p class='empty-state'>No complaints match your filters.</p>
         {% endif %}
     </div>
 </div>

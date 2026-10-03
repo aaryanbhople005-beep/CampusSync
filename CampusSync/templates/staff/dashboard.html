@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block title %}Staff Dashboard{% endblock %}
+
+{% block content %}
+<div class='dashboard'>
+    <div class='dashboard-header'>
+        <h2>Department Staff Dashboard</h2>
+        <p>{{ user.full_name }} · {{ user.username }} · {{ department.name if department else 'No department assigned' }}</p>
+    </div>
+
+    <div class='stats-grid'>
+        <div class='stat-card'>
+            <div class='stat-icon'>📋</div>
+            <div class='stat-info'><h3>{{ total }}</h3><p>Assigned Complaints</p></div>
+        </div>
+        <div class='stat-card'>
+            <div class='stat-icon'>🔴</div>
+            <div class='stat-info'><h3>{{ open_count }}</h3><p>Open / Reopened</p></div>
+        </div>
+        <div class='stat-card'>
+            <div class='stat-icon'>⚙️</div>
+            <div class='stat-info'><h3>{{ progress_count }}</h3><p>In Progress</p></div>
+        </div>
+        <div class='stat-card'>
+            <div class='stat-icon'>✅</div>
+            <div class='stat-info'><h3>{{ resolved_count }}</h3><p>Resolved</p></div>
+        </div>
+    </div>
+
+    {% if breached %}
+    <div class='alert-box'>
+        <strong>SLA Alert:</strong> {{ breached|length }} assigned complaint(s) have exceeded the SLA threshold and need attention.
+        <a href='{{ url_for('staff.complaints', sla='1') }}'>View breached complaints</a>
+    </div>
+    {% endif %}
+
+    <div class='quick-actions'>
+        <h3>Quick Actions</h3>
+        <div class='action-buttons'>
+            <a href='{{ url_for('staff.complaints') }}' class='btn btn-primary'>My Complaint Queue</a>
+            <a href='{{ url_for('staff.complaints', status='OPEN') }}' class='btn btn-secondary'>Open Only</a>
+            <a href='{{ url_for('staff.complaints', status='IN PROGRESS') }}' class='btn btn-secondary'>In Progress</a>
+        </div>
+    </div>
+
+    <div class='table-card'>
+        <h3>Complaints by Status</h3>
+        <div class='bar-chart'>
+            {% for status, count in by_status.items() %}
+            <div class='bar-row'>
+                <span class='bar-label'>{{ status }}</span>
+                <div class='bar-track'>
+                    <div class='bar-fill bar-{{ status|lower|replace(' ', '-') }}' style='width: {{ (count / total * 100)|round(0, 'floor') if total else 0 }}%'></div>
+                </div>
+                <span class='bar-value'>{{ count }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class='table-card'>
+        <h3>Recent Assigned Complaints</h3>
+        {% if complaints %}
+        <div class='table-responsive'>
+            <table class='data-table'>
+                <thead><tr><th>ID</th><th>Title</th><th>Category</th><th>Student</th><th>Status</th><th>SLA</th></tr></thead>
+                <tbody>
+                    {% for c in complaints %}
+                    <tr>
+                        <td><a href='{{ url_for('staff.complaint_detail', complaint_pk=c.id) }}'>{{ c.complaint_id }}</a></td>
+                        <td>{{ c.title }}</td>
+                        <td>{{ c.category }}</td>
+                        <td>{{ c.student.full_name if c.student else 'N/A' }}</td>
+                        <td><span class='status-badge status-{{ c.status|lower|replace(' ', '-') }}'>{{ c.status }}</span></td>
+                        <td>{% if c.sla_breached %}<span class='status-badge status-closed'>BREACHED</span>{% else %}—{% endif %}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class='empty-state'>No complaints are currently assigned to your department.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+
+{% block title %}Complaint {{ complaint.complaint_id }}{% endblock %}
+
+{% block content %}
+<div class='page-container'>
+    <div class='page-header'>
+        <h2>{{ complaint.title }}</h2>
+        <p>{{ complaint.complaint_id }} · {{ complaint.category }}
+           {%- if complaint.department %} · {{ complaint.department.name }}{% endif %}</p>
+    </div>
+
+    <div class='complaint-detail-card'>
+        <div class='detail-grid'>
+            <div class='detail-item'>
+                <span class='detail-label'>Status</span>
+                <span class='detail-value'><span class='status-badge status-{{ complaint.status|lower|replace(' ', '-') }}'>{{ complaint.status }}</span></span>
+            </div>
+            <div class='detail-item'>
+                <span class='detail-label'>Student</span>
+                <span class='detail-value'>{{ complaint.student.full_name if complaint.student else 'N/A' }}</span>
+            </div>
+            <div class='detail-item'>
+                <span class='detail-label'>Department</span>
+                <span class='detail-value'>{{ complaint.department.name if complaint.department else 'Unassigned' }}</span>
+            </div>
+            <div class='detail-item'>
+                <span class='detail-label'>Assigned To</span>
+                <span class='detail-value'>{{ complaint.assigned_to.full_name if complaint.assigned_to else 'Unassigned' }}</span>
+            </div>
+            <div class='detail-item'>
+                <span class='detail-label'>Submitted</span>
+                <span class='detail-value'>{{ complaint.created_at.strftime('%Y-%m-%d %H:%M') if complaint.created_at else 'N/A' }}</span>
+            </div>
+            <div class='detail-item'>
+                <span class='detail-label'>SLA Due</span>
+                <span class='detail-value'>{{ complaint.sla_due_at.strftime('%Y-%m-%d %H:%M') if complaint.sla_due_at else 'N/A' }}
+                    {% if complaint.sla_breached %}<span class='status-badge status-closed'>BREACHED</span>{% endif %}</span>
+            </div>
+            <div class='detail-item full-width'>
+                <span class='detail-label'>Description</span>
+                <p class='detail-value'>{{ complaint.description }}</p>
+            </div>
+            {% if complaint.resolution_notes %}
+            <div class='detail-item full-width'>
+                <span class='detail-label'>Resolution Notes</span>
+                <p class='detail-value note-box'>{{ complaint.resolution_notes }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class='two-column'>
+        <div class='form-card'>
+            <h3>Update Status</h3>
+            {% if allowed_next %}
+            <form method='POST' action='{{ url_for('admin.update_complaint_status') }}' novalidate>
+                <input type='hidden' name='complaint_id' value='{{ complaint.complaint_id }}'>
+                <div class='form-group'>
+                    <label for='status'>New Status</label>
+                    <select id='status' name='status'>
+                        {% for s in allowed_next %}
+                        <option value='{{ s }}'>{{ s }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type='submit' class='btn btn-primary'>Update Status</button>
+            </form>
+            {% else %}
+            <p class='empty-state'>No further status change available from {{ complaint.status }}.</p>
+            {% endif %}
+        </div>
+
+        <div class='form-card'>
+            <h3>Assign Department Staff</h3>
+            <form method='POST' action='{{ url_for('admin.assign_complaint', complaint_pk=complaint.id) }}' novalidate>
+                <div class='form-group'>
+                    <label for='assigned_to_id'>Department Staff</label>
+                    <select id='assigned_to_id' name='assigned_to_id'>
+                        <option value=''>Select staff</option>
+                        {% for s in staff_members %}
+                        <option value='{{ s.id }}' {% if complaint.assigned_to_id == s.id %}selected{% endif %}>
+                            {{ s.full_name }}{% if s.department %} ({{ s.department.name }}){% endif %}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type='submit' class='btn btn-secondary'>Assign</button>
+            </form>
+        </div>
+    </div>
+
+    <div class='table-card'>
+        <h3>Status History</h3>
+        {% if history %}
+        <div class='table-responsive'>
+            <table class='data-table'>
+                <thead><tr><th>Date</th><th>From</th><th>To</th><th>Changed By</th><th>Note</th></tr></thead>
+                <tbody>
+                    {% for h in history %}
+                    <tr>
+                        <td>{{ h.created_at.strftime('%Y-%m-%d %H:%M') if h.created_at else 'N/A' }}</td>
+                        <td>{{ h.from_status or '-' }}</td>
+                        <td><span class='status-badge status-{{ h.to_status|lower|replace(' ', '-') }}'>{{ h.to_status }}</span></td>
+                        <td>{{ h.changed_by.full_name if h.changed_by else 'System' }}</td>
+                        <td>{{ h.note or '-' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class='empty-state'>No status history recorded yet.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,43 +1,51 @@
 {% extends 'base.html' %}
 
-{% block title %}Students{% endblock %}
+{% block title %}Users{% endblock %}
 
 {% block content %}
 <div class='page-container'>
     <div class='page-header'>
-        <h2>Student Management</h2>
-        <p>View all registered students</p>
+        <h2>Users</h2>
+        <p>View users across all roles</p>
     </div>
-    
+
+    <div class='tabs'>
+        {% for r in roles %}
+        <a href='{{ url_for('admin.students', role=r) }}'
+           class='tab-btn {% if filters.role == r %}active{% endif %}'>{{ role_labels[r] }}</a>
+        {% endfor %}
+    </div>
+
     <div class='table-card'>
+        <h3>{{ role_labels[filters.role] }} ({{ students|length }})</h3>
         {% if students %}
         <div class='table-responsive'>
             <table class='data-table'>
                 <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Username</th>
-                        <th>Full Name</th>
-                        <th>Email</th>
-                        <th>Registered On</th>
-                    </tr>
+                    <tr><th>ID</th><th>Username</th><th>Full Name</th><th>Email</th><th>Role</th><th>Department</th><th>Active</th><th>Registered On</th></tr>
                 </thead>
                 <tbody>
-                    {% for student in students %}
+                    {% for u in students %}
                     <tr>
-                        <td>{{ student.id }}</td>
-                        <td>{{ student.username }}</td>
-                        <td>{{ student.full_name }}</td>
-                        <td>{{ student.email }}</td>
-                        <td>{{ student.created_at.strftime('%Y-%m-%d') if student.created_at else 'N/A' }}</td>
+                        <td>{{ u.id }}</td>
+                        <td>{{ u.username }}</td>
+                        <td>{{ u.full_name }}</td>
+                        <td>{{ u.email }}</td>
+                        <td><span class='status-badge role-{{ u.role }}'>{{ u.role_label }}</span></td>
+                        <td>{{ u.department.name if u.department else '-' }}</td>
+                        <td><span class='status-badge {% if u.is_active %}status-resolved{% else %}status-closed{% endif %}'>{% if u.is_active %}Active{% else %}Inactive{% endif %}</span></td>
+                        <td>{{ u.created_at.strftime('%Y-%m-%d') if u.created_at else 'N/A' }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
         {% else %}
-        <p class='empty-state'>No students found.</p>
+        <p class='empty-state'>No users with this role.</p>
         {% endif %}
+        <div class='action-buttons' style='margin-top:1rem;'>
+            <a href='{{ url_for('admin.users') }}' class='btn btn-primary'>Manage Users &amp; Roles</a>
+        </div>
     </div>
 </div>
 {% endblock %}

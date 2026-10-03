@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+
+{% block title %}Audit Logs{% endblock %}
+
+{% block content %}
+<div class='page-container'>
+    <div class='page-header'>
+        <h2>Audit Logs</h2>
+        <p>Chronological record of important actions (latest {{ entries|length }} shown)</p>
+    </div>
+
+    <form method='GET' class='form-card' novalidate>
+        <div class='form-row'>
+            <div class='form-group'>
+                <label for='q'>Search</label>
+                <input type='text' id='q' name='q' value='{{ filters.q }}'
+                       placeholder='User, record reference or description'>
+            </div>
+            <div class='form-group'>
+                <label for='action'>Action</label>
+                <select id='action' name='action'>
+                    <option value=''>All actions</option>
+                    {% for a in actions %}
+                    <option value='{{ a }}' {% if filters.action == a %}selected{% endif %}>{{ a }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class='form-group'>
+                <label for='module'>Module</label>
+                <select id='module' name='module'>
+                    <option value=''>All modules</option>
+                    {% for m in modules %}
+                    <option value='{{ m }}' {% if filters.module == m %}selected{% endif %}>{{ m }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class='form-group'>
+                <label for='from'>Date From</label>
+                <input type='date' id='from' name='from' value='{{ filters['from'] }}'>
+            </div>
+            <div class='form-group'>
+                <label for='to'>Date To</label>
+                <input type='date' id='to' name='to' value='{{ filters['to'] }}'>
+            </div>
+            <div class='form-group' style='display:flex;align-items:flex-end;'>
+                <button type='submit' class='btn btn-primary'>Filter</button>
+            </div>
+        </div>
+    </form>
+
+    <div class='table-card'>
+        <h3>Audit Entries ({{ entries|length }})</h3>
+        <div class='action-buttons' style='margin-bottom:1rem;'>
+            <a class='btn btn-secondary' href='{{ url_for('admin.export', report='audit') }}'>Export CSV</a>
+        </div>
+        {% if entries %}
+        <div class='table-responsive'>
+            <table class='data-table'>
+                <thead>
+                    <tr><th>ID</th><th>Timestamp</th><th>User</th><th>Action</th><th>Module</th><th>Record</th><th>Description</th><th>IP</th></tr>
+                </thead>
+                <tbody>
+                    {% for e in entries %}
+                    <tr>
+                        <td>{{ e.id }}</td>
+                        <td>{{ e.created_at.strftime('%Y-%m-%d %H:%M:%S') if e.created_at else 'N/A' }}</td>
+                        <td>{{ e.username or 'anonymous' }}</td>
+                        <td><span class='status-badge'>{{ e.action }}</span></td>
+                        <td>{{ e.module or '-' }}</td>
+                        <td>{{ e.record_ref or '-' }}</td>
+                        <td>{{ e.description or '-' }}</td>
+                        <td>{{ e.ip_address or '-' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class='empty-state'>No audit entries match your filters.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

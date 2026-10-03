@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+
+{% block title %}User Management{% endblock %}
+
+{% block content %}
+<div class='page-container'>
+    <div class='page-header'>
+        <h2>User Management</h2>
+        <p>Create users, assign roles and deactivate accounts</p>
+    </div>
+
+    <form method='POST' class='form-card' novalidate>
+        <input type='hidden' name='action' value='create'>
+        <h3>Create New User</h3>
+        <div class='form-row'>
+            <div class='form-group'>
+                <label for='username'>Username <span class='required'>*</span></label>
+                <input type='text' id='username' name='username' maxlength='80'>
+            </div>
+            <div class='form-group'>
+                <label for='full_name'>Full Name <span class='required'>*</span></label>
+                <input type='text' id='full_name' name='full_name' maxlength='100'>
+            </div>
+            <div class='form-group'>
+                <label for='email'>Email <span class='required'>*</span></label>
+                <input type='text' id='email' name='email' maxlength='120'>
+            </div>
+            <div class='form-group'>
+                <label for='password'>Password <span class='required'>*</span></label>
+                <input type='text' id='password' name='password' minlength='6'>
+            </div>
+            <div class='form-group'>
+                <label for='role'>Role <span class='required'>*</span></label>
+                <select id='role' name='role'>
+                    {% for r in roles %}
+                    <option value='{{ r }}'>{{ role_labels[r] }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class='form-group'>
+                <label for='department_id'>Department</label>
+                <select id='department_id' name='department_id'>
+                    <option value=''>None</option>
+                    {% for d in departments %}
+                    <option value='{{ d.id }}'>{{ d.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <button type='submit' class='btn btn-primary'>Create User</button>
+    </form>
+
+    <div class='table-card'>
+        <h3>All Users ({{ users|length }})</h3>
+        <div class='table-responsive'>
+            <table class='data-table'>
+                <thead>
+                    <tr><th>ID</th><th>Username</th><th>Full Name</th><th>Email</th><th>Role</th><th>Department</th><th>Active</th><th>Edit</th></tr>
+                </thead>
+                <tbody>
+                    {% for u in users %}
+                    <tr class='{% if not u.is_active %}row-muted{% endif %}'>
+                        <td>{{ u.id }}</td>
+                        <td>{{ u.username }}</td>
+                        <td>{{ u.full_name }}</td>
+                        <td>{{ u.email }}</td>
+                        <td><span class='status-badge role-{{ u.role }}'>{{ u.role_label }}</span></td>
+                        <td>{{ u.department.name if u.department else '-' }}</td>
+                        <td>
+                            <span class='status-badge {% if u.is_active %}status-resolved{% else %}status-closed{% endif %}'>
+                                {% if u.is_active %}Active{% else %}Inactive{% endif %}
+                            </span>
+                        </td>
+                        <td>
+                            <button class='btn btn-secondary btn-sm' type='button'
+                                    data-modal-open='edit-{{ u.id }}'>Edit</button>
+                            <form method='POST' style='display:inline;'>
+                                <input type='hidden' name='action' value='toggle_active'>
+                                <input type='hidden' name='user_id' value='{{ u.id }}'>
+                                <button type='submit' class='btn btn-sm {% if u.is_active %}btn-danger{% else %}btn-primary{% endif %}'>
+                                    {% if u.is_active %}Deactivate{% else %}Activate{% endif %}
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% for u in users %}
+    <div class='modal' id='edit-{{ u.id }}'>
+        <div class='modal-content'>
+            <h3>Edit User: {{ u.username }}</h3>
+            <form method='POST' novalidate>
+                <input type='hidden' name='action' value='edit'>
+                <input type='hidden' name='user_id' value='{{ u.id }}'>
+                <div class='form-row'>
+                    <div class='form-group'>
+                        <label for='fn_{{ u.id }}'>Full Name</label>
+                        <input type='text' id='fn_{{ u.id }}' name='full_name' value='{{ u.full_name }}'>
+                    </div>
+                    <div class='form-group'>
+                        <label for='em_{{ u.id }}'>Email</label>
+                        <input type='text' id='em_{{ u.id }}' name='email' value='{{ u.email }}'>
+                    </div>
+                    <div class='form-group'>
+                        <label for='ro_{{ u.id }}'>Role</label>
+                        <select id='ro_{{ u.id }}' name='role'>
+                            {% for r in roles %}
+                            <option value='{{ r }}' {% if u.role == r %}selected{% endif %}>{{ role_labels[r] }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class='form-group'>
+                        <label for='de_{{ u.id }}'>Department</label>
+                        <select id='de_{{ u.id }}' name='department_id'>
+                            <option value=''>None</option>
+                            {% for d in departments %}
+                            <option value='{{ d.id }}' {% if u.department_id == d.id %}selected{% endif %}>{{ d.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class='form-group'>
+                        <label for='pw_{{ u.id }}'>New Password (leave blank to keep)</label>
+                        <input type='text' id='pw_{{ u.id }}' name='password' placeholder='Optional'>
+                    </div>
+                </div>
+                <div class='action-buttons'>
+                    <button type='submit' class='btn btn-primary'>Save Changes</button>
+                    <button type='button' class='btn btn-secondary' data-modal-close='edit-{{ u.id }}'>Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

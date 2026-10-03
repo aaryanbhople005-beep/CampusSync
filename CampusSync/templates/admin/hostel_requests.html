@@ -6,23 +6,53 @@
 <div class='page-container'>
     <div class='page-header'>
         <h2>Hostel Requests</h2>
-        <p>Manage student hostel accommodation requests</p>
+        <p>Manage student hostel allocation, maintenance and outpass requests</p>
     </div>
-    
+
+    <form method='GET' class='form-card' novalidate>
+        <div class='form-row'>
+            <div class='form-group'>
+                <label for='status'>Status</label>
+                <select id='status' name='status'>
+                    <option value=''>All statuses</option>
+                    {% for s in statuses %}
+                    <option value='{{ s }}' {% if filters.status == s %}selected{% endif %}>{{ s }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class='form-group'>
+                <label for='type'>Type</label>
+                <select id='type' name='type'>
+                    <option value=''>All types</option>
+                    <option value='HOSTEL ALLOCATION' {% if filters.type == 'HOSTEL ALLOCATION' %}selected{% endif %}>Hostel Allocation</option>
+                    <option value='MAINTENANCE' {% if filters.type == 'MAINTENANCE' %}selected{% endif %}>Maintenance</option>
+                    <option value='OUTPASS / LEAVE' {% if filters.type == 'OUTPASS / LEAVE' %}selected{% endif %}>Outpass / Leave</option>
+                </select>
+            </div>
+            <div class='form-group'>
+                <label for='block'>Hostel Block</label>
+                <select id='block' name='block'>
+                    <option value=''>All blocks</option>
+                    {% for b in blocks %}
+                    <option value='{{ b.id }}' {% if filters.block == b.id|string %}selected{% endif %}>{{ b.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class='form-group' style='display:flex;align-items:flex-end;'>
+                <button type='submit' class='btn btn-primary'>Filter</button>
+            </div>
+        </div>
+    </form>
+
     <div class='table-card'>
+        <h3>Requests ({{ requests|length }})</h3>
         {% if requests %}
         <div class='table-responsive'>
             <table class='data-table'>
                 <thead>
                     <tr>
-                        <th>Request ID</th>
-                        <th>Student</th>
-                        <th>Hostel</th>
-                        <th>Room Preference</th>
-                        <th>Reason</th>
-                        <th>Status</th>
-                        <th>Date</th>
-                        <th>Action</th>
+                        <th>Request ID</th><th>Student</th><th>Type</th><th>Hostel</th>
+                        <th>Details</th><th>Status</th><th>Date</th><th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -30,18 +60,22 @@
                     <tr>
                         <td>{{ req.request_id }}</td>
                         <td>{{ req.student.full_name if req.student else 'N/A' }}</td>
+                        <td>{{ req.request_type }}</td>
                         <td>{{ req.hostel_name }}</td>
-                        <td>{{ req.room_preference }}</td>
-                        <td>{{ req.reason[:50] }}{% if req.reason|length > 50 %}...{% endif %}</td>
-                        <td><span class='status-badge status-{{ req.status.lower() }}'>{{ req.status }}</span></td>
+                        <td>
+                            {% if req.request_type == 'MAINTENANCE' %}{{ req.issue_type }} — {{ req.location }}
+                            {% elif req.request_type == 'OUTPASS / LEAVE' %}{{ req.start_date }} to {{ req.end_date }}
+                            {% else %}Room: {{ req.room_preference }}{% endif %}
+                        </td>
+                        <td><span class='status-badge status-{{ req.status|lower|replace(' ', '-') }}'>{{ req.status }}</span></td>
                         <td>{{ req.created_at.strftime('%Y-%m-%d') if req.created_at else 'N/A' }}</td>
                         <td>
                             <form method='POST' action='{{ url_for('admin.update_hostel_status') }}' class='status-form'>
                                 <input type='hidden' name='request_id' value='{{ req.request_id }}'>
                                 <select name='status' onchange='this.form.submit()' class='status-select'>
-                                    <option value='Pending' {% if req.status == 'Pending' %}selected{% endif %}>Pending</option>
-                                    <option value='Approved' {% if req.status == 'Approved' %}selected{% endif %}>Approved</option>
-                                    <option value='Rejected' {% if req.status == 'Rejected' %}selected{% endif %}>Rejected</option>
+                                    {% for s in statuses %}
+                                    <option value='{{ s }}' {% if req.status == s %}selected{% endif %}>{{ s }}</option>
+                                    {% endfor %}
                                 </select>
                             </form>
                         </td>
@@ -51,7 +85,7 @@
             </table>
         </div>
         {% else %}
-        <p class='empty-state'>No hostel requests found.</p>
+        <p class='empty-state'>No hostel requests match your filters.</p>
         {% endif %}
     </div>
 </div>

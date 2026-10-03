@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+
+{% block title %}Hostel Blocks{% endblock %}
+
+{% block content %}
+<div class='page-container'>
+    <div class='page-header'>
+        <h2>Hostel Blocks</h2>
+        <p>Create hostel blocks and assign a warden to each block</p>
+    </div>
+
+    <form method='POST' class='form-card' novalidate>
+        <input type='hidden' name='action' value='create'>
+        <h3>Create Hostel Block</h3>
+        <div class='form-row'>
+            <div class='form-group'>
+                <label for='name'>Name <span class='required'>*</span></label>
+                <input type='text' id='name' name='name' maxlength='100'>
+            </div>
+            <div class='form-group'>
+                <label for='code'>Code</label>
+                <input type='text' id='code' name='code' maxlength='20'>
+            </div>
+            <div class='form-group'>
+                <label for='warden_id'>Warden</label>
+                <select id='warden_id' name='warden_id'>
+                    <option value=''>Unassigned</option>
+                    {% for w in wardens %}
+                    <option value='{{ w.id }}'>{{ w.full_name }} ({{ w.username }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class='form-group'>
+                <label for='total_rooms'>Total Rooms</label>
+                <input type='number' id='total_rooms' name='total_rooms' min='0' value='0'>
+            </div>
+        </div>
+        <button type='submit' class='btn btn-primary'>Create Block</button>
+    </form>
+
+    <div class='table-card'>
+        <h3>All Hostel Blocks ({{ blocks|length }})</h3>
+        <div class='table-responsive'>
+            <table class='data-table'>
+                <thead><tr><th>ID</th><th>Name</th><th>Code</th><th>Warden</th><th>Rooms</th><th>Active</th><th>Edit</th><th>Toggle</th></tr></thead>
+                <tbody>
+                    {% for b in blocks %}
+                    <tr class='{% if not b.is_active %}row-muted{% endif %}'>
+                        <td>{{ b.id }}</td>
+                        <td>{{ b.name }}</td>
+                        <td>{{ b.code or '-' }}</td>
+                        <td>{{ b.warden.full_name if b.warden else 'Unassigned' }}</td>
+                        <td>{{ b.total_rooms }}</td>
+                        <td><span class='status-badge {% if b.is_active %}status-resolved{% else %}status-closed{% endif %}'>{% if b.is_active %}Active{% else %}Inactive{% endif %}</span></td>
+                        <td><button class='btn btn-secondary btn-sm' type='button' data-modal-open='blk-{{ b.id }}'>Edit</button></td>
+                        <td>
+                            <form method='POST'>
+                                <input type='hidden' name='action' value='toggle_active'>
+                                <input type='hidden' name='block_id' value='{{ b.id }}'>
+                                <button type='submit' class='btn btn-sm {% if b.is_active %}btn-danger{% else %}btn-primary{% endif %}'>
+                                    {% if b.is_active %}Deactivate{% else %}Activate{% endif %}
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% for b in blocks %}
+    <div class='modal' id='blk-{{ b.id }}'>
+        <div class='modal-content'>
+            <h3>Edit Block: {{ b.name }}</h3>
+            <form method='POST' novalidate>
+                <input type='hidden' name='action' value='edit'>
+                <input type='hidden' name='block_id' value='{{ b.id }}'>
+                <div class='form-row'>
+                    <div class='form-group'>
+                        <label for='bn_{{ b.id }}'>Name</label>
+                        <input type='text' id='bn_{{ b.id }}' name='name' value='{{ b.name }}'>
+                    </div>
+                    <div class='form-group'>
+                        <label for='bc_{{ b.id }}'>Code</label>
+                        <input type='text' id='bc_{{ b.id }}' name='code' value='{{ b.code or '' }}'>
+                    </div>
+                    <div class='form-group'>
+                        <label for='bw_{{ b.id }}'>Warden</label>
+                        <select id='bw_{{ b.id }}' name='warden_id'>
+                            <option value=''>Unassigned</option>
+                            {% for w in wardens %}
+                            <option value='{{ w.id }}' {% if b.warden_id == w.id %}selected{% endif %}>{{ w.full_name }} ({{ w.username }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class='form-group'>
+                        <label for='br_{{ b.id }}'>Total Rooms</label>
+                        <input type='number' id='br_{{ b.id }}' name='total_rooms' min='0' value='{{ b.total_rooms or 0 }}'>
+                    </div>
+                </div>
+                <div class='form-group'>
+                    <label for='bd_{{ b.id }}'>Description</label>
+                    <textarea id='bd_{{ b.id }}' name='description' rows='3'>{{ b.description or '' }}</textarea>
+                </div>
+                <label class='radio-label'>
+                    <input type='checkbox' name='is_active' value='1' {% if b.is_active %}checked{% endif %}> Active
+                </label>
+                <div class='action-buttons' style='margin-top:1rem;'>
+                    <button type='submit' class='btn btn-primary'>Save Changes</button>
+                    <button type='button' class='btn btn-secondary' data-modal-close='blk-{{ b.id }}'>Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

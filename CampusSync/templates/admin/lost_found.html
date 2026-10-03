@@ -1,40 +1,72 @@
 {% extends 'base.html' %}
 
-{% block title %}Lost & Found{% endblock %}
+{% block title %}Lost &amp; Found Management{% endblock %}
 
 {% block content %}
 <div class='page-container'>
     <div class='page-header'>
-        <h2>Lost & Found Management</h2>
-        <p>View all lost and found reports</p>
+        <h2>Lost &amp; Found Management</h2>
+        <p>All lost and found reports across the campus</p>
     </div>
-    
+
+    <form method='GET' class='form-card' novalidate>
+        <div class='form-row'>
+            <div class='form-group'>
+                <label for='category'>Category</label>
+                <select id='category' name='category'>
+                    <option value=''>All categories</option>
+                    {% for c in categories %}
+                    <option value='{{ c }}' {% if filters.category == c %}selected{% endif %}>{{ c }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class='form-group'>
+                <label for='status'>Status</label>
+                <select id='status' name='status'>
+                    <option value=''>All statuses</option>
+                    <option value='OPEN' {% if filters.status == 'OPEN' %}selected{% endif %}>OPEN</option>
+                    <option value='CLAIMED' {% if filters.status == 'CLAIMED' %}selected{% endif %}>CLAIMED</option>
+                </select>
+            </div>
+            <div class='form-group'>
+                <label for='from'>Date From</label>
+                <input type='date' id='from' name='from' value='{{ filters['from'] }}'>
+            </div>
+            <div class='form-group'>
+                <label for='to'>Date To</label>
+                <input type='date' id='to' name='to' value='{{ filters['to'] }}'>
+            </div>
+            <div class='form-group' style='display:flex;align-items:flex-end;'>
+                <button type='submit' class='btn btn-primary'>Filter</button>
+            </div>
+        </div>
+    </form>
+
     <div class='table-card'>
+        <h3>Reports ({{ items|length }})</h3>
         {% if items %}
         <div class='table-responsive'>
             <table class='data-table'>
                 <thead>
                     <tr>
-                        <th>Item ID</th>
-                        <th>Student</th>
-                        <th>Item Name</th>
-                        <th>Type</th>
-                        <th>Location</th>
-                        <th>Date</th>
-                        <th>Status</th>
-                        <th>Claimed By</th>
+                        <th>Item ID</th><th>Student</th><th>Item Name</th><th>Category</th>
+                        <th>Type</th><th>Location</th><th>Date</th><th>Status</th><th>Claimed By</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for item in items %}
-                    <tr>
+                    <tr class='{% if item.retention_flag %}row-alert{% endif %}'>
                         <td>{{ item.item_id }}</td>
                         <td>{{ item.student.full_name if item.student else 'N/A' }}</td>
                         <td>{{ item.item_name }}</td>
-                        <td><span class='status-badge status-{{ item.item_type.lower() }}'>{{ item.item_type }}</span></td>
+                        <td>{{ item.item_category or '-' }}</td>
+                        <td><span class='status-badge status-{{ item.item_type|lower }}'>{{ item.item_type }}</span></td>
                         <td>{{ item.location }}</td>
                         <td>{{ item.date }}</td>
-                        <td><span class='status-badge status-{{ item.status.lower() }}'>{{ item.status }}</span></td>
+                        <td>
+                            <span class='status-badge status-{{ item.status|lower }}'>{{ item.status }}</span>
+                            {% if item.retention_flag %}<span class='status-badge status-unread'>OLD</span>{% endif %}
+                        </td>
                         <td>{{ item.claimant.full_name if item.claimant else '-' }}</td>
                     </tr>
                     {% endfor %}
@@ -42,7 +74,7 @@
             </table>
         </div>
         {% else %}
-        <p class='empty-state'>No lost & found reports found.</p>
+        <p class='empty-state'>No lost &amp; found reports match your filters.</p>
         {% endif %}
     </div>
 </div>

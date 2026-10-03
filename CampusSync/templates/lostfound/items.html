@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block title %}Found Items{% endblock %}
+
+{% block content %}
+<div class='page-container'>
+    <div class='page-header'>
+        <h2>Lost &amp; Found Items</h2>
+        <p>All reported lost and found items on the desk</p>
+    </div>
+
+    <form method='GET' class='form-card' novalidate>
+        <div class='form-row'>
+            <div class='form-group'>
+                <label for='q'>Search</label>
+                <input type='text' id='q' name='q' value='{{ filters.q }}'
+                       placeholder='Item ID, name, description or location'>
+            </div>
+            <div class='form-group'>
+                <label for='type'>Type</label>
+                <select id='type' name='type'>
+                    <option value=''>All types</option>
+                    <option value='LOST' {% if filters.type == 'LOST' %}selected{% endif %}>LOST</option>
+                    <option value='FOUND' {% if filters.type == 'FOUND' %}selected{% endif %}>FOUND</option>
+                </select>
+            </div>
+            <div class='form-group'>
+                <label for='status'>Status</label>
+                <select id='status' name='status'>
+                    <option value=''>All statuses</option>
+                    <option value='OPEN' {% if filters.status == 'OPEN' %}selected{% endif %}>OPEN</option>
+                    <option value='CLAIMED' {% if filters.status == 'CLAIMED' %}selected{% endif %}>CLAIMED</option>
+                </select>
+            </div>
+            <div class='form-group' style='display:flex;align-items:flex-end;'>
+                <button type='submit' class='btn btn-primary'>Filter</button>
+            </div>
+        </div>
+    </form>
+
+    <div class='table-card'>
+        <h3>Items ({{ items|length }})</h3>
+        {% if items %}
+        <div class='table-responsive'>
+            <table class='data-table'>
+                <thead>
+                    <tr><th>Item ID</th><th>Item</th><th>Category</th><th>Type</th><th>Location</th><th>Date</th><th>Status</th><th>Action</th></tr>
+                </thead>
+                <tbody>
+                    {% for i in items %}
+                    <tr>
+                        <td>{{ i.item_id }}</td>
+                        <td>{{ i.item_name }}<br><span class='muted'>{{ i.description[:50] }}{% if i.description|length > 50 %}...{% endif %}</span></td>
+                        <td>{{ i.item_category or '-' }}</td>
+                        <td><span class='status-badge status-{{ i.item_type|lower }}'>{{ i.item_type }}</span></td>
+                        <td>{{ i.location }}</td>
+                        <td>{{ i.date }}</td>
+                        <td>
+                            <span class='status-badge status-{{ i.status|lower }}'>{{ i.status }}</span>
+                            {% if i.retention_flag %}<span class='status-badge status-unread'>OLD</span>{% endif %}
+                        </td>
+                        <td>
+                            {% if i.item_type == 'FOUND' and i.status == 'OPEN' %}
+                            <form method='POST' action='{{ url_for('lostfound.mark_claimed', item_pk=i.id) }}' novalidate>
+                                <input type='hidden' name='note' value='Handed over at the desk'>
+                                <button type='submit' class='btn btn-secondary btn-sm'>Mark Claimed</button>
+                            </form>
+                            {% else %}
+                            <span class='muted'>—</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class='empty-state'>No items match your filters.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -6,49 +6,98 @@
 <div class='page-container'>
     <div class='page-header'>
         <h2>Hostel Request</h2>
-        <p>Submit a new hostel accommodation request</p>
+        <p>Submit an allocation, maintenance or outpass / leave request</p>
     </div>
-    
-    <form method='POST' class='form-card' style='margin-bottom: 2rem;'>
+
+    <form method='POST' class='form-card' style='margin-bottom: 2rem;' novalidate>
         <div class='form-group'>
-            <label for='hostel_name'>Hostel Name <span class='required'>*</span></label>
-            <select id='hostel_name' name='hostel_name' required>
-                <option value=''>Select a hostel</option>
-                {% for hostel in hostels %}
-                <option value='{{ hostel }}'>{{ hostel }}</option>
+            <label>Request Type <span class='required'>*</span></label>
+            <div class='radio-group'>
+                {% for rt in request_types %}
+                <label class='radio-label'>
+                    <input type='radio' name='request_type' value='{{ rt }}'
+                           data-requires='{{ "maintenance" if rt == "MAINTENANCE" else ("outpass" if rt == "OUTPASS / LEAVE" else "") }}'
+                           {% if form.get('request_type', 'HOSTEL ALLOCATION') == rt %}checked{% endif %}>
+                    {{ rt }}
+                </label>
                 {% endfor %}
-            </select>
+            </div>
         </div>
-        
-        <div class='form-group'>
-            <label for='room_preference'>Room Preference <span class='required'>*</span></label>
-            <select id='room_preference' name='room_preference' required>
-                <option value=''>Select room type</option>
-                {% for room in room_types %}
-                <option value='{{ room }}'>{{ room }}</option>
-                {% endfor %}
-            </select>
+
+        <div class='form-row'>
+            <div class='form-group'>
+                <label for='hostel_block_id'>Hostel Block <span class='required'>*</span></label>
+                <select id='hostel_block_id' name='hostel_block_id'>
+                    <option value=''>Select a hostel block</option>
+                    {% for b in blocks %}
+                    <option value='{{ b.id }}' {% if form.get('hostel_block_id', default_block_id|string) == b.id|string %}selected{% endif %}>{{ b.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class='form-group' data-section='allocation'>
+                <label for='room_preference'>Room Preference</label>
+                <select id='room_preference' name='room_preference'>
+                    <option value='Any'>Any</option>
+                    <option value='Single'>Single</option>
+                    <option value='Double'>Double</option>
+                    <option value='Triple'>Triple</option>
+                </select>
+            </div>
         </div>
-        
+
+        <div class='form-row' data-section='maintenance' style='display:none;'>
+            <div class='form-group'>
+                <label for='issue_type'>Issue Type <span class='required'>*</span></label>
+                <select id='issue_type' name='issue_type'>
+                    <option value=''>Select issue type</option>
+                    <option value='Electrical'>Electrical</option>
+                    <option value='Plumbing'>Plumbing</option>
+                    <option value='Furniture'>Furniture</option>
+                    <option value='Cleanliness'>Cleanliness</option>
+                    <option value='Pest Control'>Pest Control</option>
+                    <option value='Other'>Other</option>
+                </select>
+            </div>
+            <div class='form-group'>
+                <label for='location'>Location <span class='required'>*</span></label>
+                <input type='text' id='location' name='location' maxlength='120'
+                       placeholder='e.g. Block B, Room 204'>
+            </div>
+        </div>
+
+        <div class='form-row' data-section='outpass' style='display:none;'>
+            <div class='form-group'>
+                <label for='start_date'>Start Date <span class='required'>*</span></label>
+                <input type='date' id='start_date' name='start_date'>
+            </div>
+            <div class='form-group'>
+                <label for='end_date'>End Date <span class='required'>*</span></label>
+                <input type='date' id='end_date' name='end_date'>
+            </div>
+        </div>
+
         <div class='form-group'>
             <label for='reason'>Reason <span class='required'>*</span></label>
-            <textarea id='reason' name='reason' placeholder='Explain why you need hostel accommodation...' required rows='4' maxlength='1000'></textarea>
+            <textarea id='reason' name='reason' rows='4' maxlength='1000'
+                      placeholder='Explain your request in detail...'
+                      >{{ form.get('reason', '') }}</textarea>
         </div>
-        
+
         <button type='submit' class='btn btn-primary'>Submit Request</button>
     </form>
-    
+
     <div class='table-card'>
-        <h3>Your Hostel Requests</h3>
+        <h3>My Hostel Requests</h3>
         {% if requests %}
         <div class='table-responsive'>
             <table class='data-table'>
                 <thead>
                     <tr>
                         <th>Request ID</th>
+                        <th>Type</th>
                         <th>Hostel</th>
-                        <th>Room Preference</th>
-                        <th>Reason</th>
+                        <th>Details</th>
                         <th>Status</th>
                         <th>Date</th>
                     </tr>
@@ -56,11 +105,19 @@
                 <tbody>
                     {% for req in requests %}
                     <tr>
-                        <td>{{ req.request_id }}</td>
+                        <td><a href='{{ url_for('student.hostel_request_detail', req_pk=req.id) }}'>{{ req.request_id }}</a></td>
+                        <td>{{ req.request_type or 'HOSTEL ALLOCATION' }}</td>
                         <td>{{ req.hostel_name }}</td>
-                        <td>{{ req.room_preference }}</td>
-                        <td>{{ req.reason[:50] }}{% if req.reason|length > 50 %}...{% endif %}</td>
-                        <td><span class='status-badge status-{{ req.status.lower() }}'>{{ req.status }}</span></td>
+                        <td>
+                            {% if req.request_type == 'MAINTENANCE' %}
+                                {{ req.issue_type }} — {{ req.location }}
+                            {% elif req.request_type == 'OUTPASS / LEAVE' %}
+                                {{ req.start_date }} to {{ req.end_date }}
+                            {% else %}
+                                Room: {{ req.room_preference }}
+                            {% endif %}
+                        </td>
+                        <td><span class='status-badge status-{{ req.status|lower|replace(' ', '-') }}'>{{ req.status }}</span></td>
                         <td>{{ req.created_at.strftime('%Y-%m-%d') if req.created_at else 'N/A' }}</td>
                     </tr>
                     {% endfor %}

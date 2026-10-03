@@ -44,6 +44,7 @@ def dashboard():
 @lostfound_bp.route('/items')
 @lostfound_required
 def items():
+    user = current_user()
     type_filter = request.args.get('type', '').strip().upper()
     status_filter = request.args.get('status', '').strip().upper()
     keyword = request.args.get('q', '').strip()
@@ -70,6 +71,7 @@ def items():
 @lostfound_bp.route('/claims')
 @lostfound_required
 def claims():
+    user = current_user()
     status_filter = request.args.get('status', CLAIM_PENDING).strip().upper()
     q = Claim.query
     if status_filter in (CLAIM_PENDING, CLAIM_APPROVED, CLAIM_REJECTED):

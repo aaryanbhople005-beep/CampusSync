@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block title %}Complaint Categories{% endblock %}
+
+{% block content %}
+<div class='page-container'>
+    <div class='page-header'>
+        <h2>Complaint Categories</h2>
+        <p>Create categories and assign each one to a department</p>
+    </div>
+
+    <form method='POST' class='form-card' novalidate>
+        <input type='hidden' name='action' value='create'>
+        <h3>Create Category</h3>
+        <div class='form-row'>
+            <div class='form-group'>
+                <label for='name'>Name <span class='required'>*</span></label>
+                <input type='text' id='name' name='name' maxlength='100'>
+            </div>
+            <div class='form-group'>
+                <label for='department_id'>Department</label>
+                <select id='department_id' name='department_id'>
+                    <option value=''>Unassigned</option>
+                    {% for d in departments %}
+                    <option value='{{ d.id }}'>{{ d.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class='form-group'>
+                <label for='sla_hours'>SLA (hours)</label>
+                <input type='number' id='sla_hours' name='sla_hours' min='1' placeholder='Use default'>
+            </div>
+        </div>
+        <button type='submit' class='btn btn-primary'>Create Category</button>
+    </form>
+
+    <div class='table-card'>
+        <h3>All Categories ({{ categories|length }})</h3>
+        <div class='table-responsive'>
+            <table class='data-table'>
+                <thead><tr><th>ID</th><th>Name</th><th>Department</th><th>SLA (hrs)</th><th>Active</th><th>Edit</th><th>Toggle</th></tr></thead>
+                <tbody>
+                    {% for c in categories %}
+                    <tr class='{% if not c.is_active %}row-muted{% endif %}'>
+                        <td>{{ c.id }}</td>
+                        <td>{{ c.name }}</td>
+                        <td>{{ c.department.name if c.department else 'Unassigned' }}</td>
+                        <td>{{ c.sla_hours or 'Default' }}</td>
+                        <td><span class='status-badge {% if c.is_active %}status-resolved{% else %}status-closed{% endif %}'>{% if c.is_active %}Active{% else %}Inactive{% endif %}</span></td>
+                        <td><button class='btn btn-secondary btn-sm' type='button' data-modal-open='cat-{{ c.id }}'>Edit</button></td>
+                        <td>
+                            <form method='POST'>
+                                <input type='hidden' name='action' value='toggle_active'>
+                                <input type='hidden' name='category_id' value='{{ c.id }}'>
+                                <button type='submit' class='btn btn-sm {% if c.is_active %}btn-danger{% else %}btn-primary{% endif %}'>
+                                    {% if c.is_active %}Deactivate{% else %}Activate{% endif %}
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% for c in categories %}
+    <div class='modal' id='cat-{{ c.id }}'>
+        <div class='modal-content'>
+            <h3>Edit Category: {{ c.name }}</h3>
+            <form method='POST' novalidate>
+                <input type='hidden' name='action' value='edit'>
+                <input type='hidden' name='category_id' value='{{ c.id }}'>
+                <div class='form-row'>
+                    <div class='form-group'>
+                        <label for='cn_{{ c.id }}'>Name</label>
+                        <input type='text' id='cn_{{ c.id }}' name='name' value='{{ c.name }}'>
+                    </div>
+                    <div class='form-group'>
+                        <label for='cd_{{ c.id }}'>Department</label>
+                        <select id='cd_{{ c.id }}' name='department_id'>
+                            <option value=''>Unassigned</option>
+                            {% for d in departments %}
+                            <option value='{{ d.id }}' {% if c.department_id == d.id %}selected{% endif %}>{{ d.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class='form-group'>
+                        <label for='cs_{{ c.id }}'>SLA (hours)</label>
+                        <input type='number' id='cs_{{ c.id }}' name='sla_hours' min='1' value='{{ c.sla_hours or '' }}'>
+                    </div>
+                </div>
+                <label class='radio-label'>
+                    <input type='checkbox' name='is_active' value='1' {% if c.is_active %}checked{% endif %}> Active
+                </label>
+                <div class='action-buttons' style='margin-top:1rem;'>
+                    <button type='submit' class='btn btn-primary'>Save Changes</button>
+                    <button type='button' class='btn btn-secondary' data-modal-close='cat-{{ c.id }}'>Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

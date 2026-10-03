@@ -479,7 +479,7 @@ def hostel_request_detail(req_pk):
 # Lost & Found
 # ---------------------------------------------------------------------------
 
-def _search_items(student_id, keyword, category, type_filter, date_from, date_to,
+def _search_items(keyword, category, type_filter, date_from, date_to,
                   claimable_only=False):
     q = LostFoundItem.query
     if keyword:
@@ -502,9 +502,10 @@ def _search_items(student_id, keyword, category, type_filter, date_from, date_to
         q = q.filter(LostFoundItem.item_type == ITEM_FOUND,
                      LostFoundItem.status == LF_OPEN)
     else:
-        # CLAIMED items are preserved in the DB but removed from active results.
-        q = q.filter(db.or_(LostFoundItem.status != 'CLAIMED',
-                            LostFoundItem.claimed_by == student_id))
+        # SRS: once an item is CLAIMED it is removed from active search results.
+        # It is never deleted - the record is preserved and the owner still sees
+        # it under "My Reports".
+        q = q.filter(LostFoundItem.status != 'CLAIMED')
     return q.order_by(LostFoundItem.created_at.desc()).all()
 
 
@@ -630,11 +631,10 @@ def lost_found():
     date_from = request.args.get('from', '').strip()
     date_to = request.args.get('to', '').strip()
 
-    results = _search_items(user.id, keyword, category, type_filter,
-                            date_from, date_to)
+    results = _search_items(keyword, category, type_filter, date_from, date_to)
 
     # The claim tab only ever lists unclaimed FOUND items.
-    claimable = _search_items(user.id, '', '', 'FOUND', '', '', claimable_only=True)
+    claimable = _search_items('', '', 'FOUND', '', '', claimable_only=True)
 
     my_items = LostFoundItem.query.filter_by(student_id=user.id).order_by(
         LostFoundItem.created_at.desc()).all()

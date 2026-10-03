@@ -240,6 +240,7 @@ def approve_claim(claim, reviewer, note=None):
 
 
 def reject_claim(claim, reviewer, note=None):
+    item = claim.item
     claim.status = CLAIM_REJECTED
     claim.reviewed_by_id = reviewer.id
     claim.reviewed_at = datetime.utcnow()
@@ -248,13 +249,13 @@ def reject_claim(claim, reviewer, note=None):
     notify(claim.student_id,
            'Claim Rejected',
            'Your claim for item %s (%s) has been rejected.%s' % (
-               claim.item_id, claim.item_name,
+               item.item_id, item.item_name,
                (' Reason: ' + note) if note else ''),
            ntype='claim', related_module='claim', related_id=str(claim.id))
 
     log_action(reviewer, 'CLAIM_REJECTED', module='lost_found',
-               record_ref=claim.item.item_id,
-               description='Claim #%s rejected for item %s' % (claim.id, claim.item_id))
+               record_ref=item.item_id,
+               description='Claim #%s rejected for item %s' % (claim.id, item.item_id))
     return claim
 
 

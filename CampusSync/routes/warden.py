@@ -97,7 +97,7 @@ def requests():
                            unread_notifications=unread_count(user.id))
 
 
-@warden_bp.route('/requests/<int:req_pk>')
+@warden_bp.route('/requests/<int:req_pk>', methods=['GET', 'POST'])
 @warden_required
 def request_detail(req_pk):
     user = current_user()

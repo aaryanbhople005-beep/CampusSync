@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block title %}Hostel Request {{ request.request_id }}{% endblock %}
+
+{% block content %}
+<div class='page-container'>
+    <div class='page-header'>
+        <h2>Hostel Request {{ request.request_id }}</h2>
+        <p>{{ request.request_type or 'HOSTEL ALLOCATION' }} · {{ request.hostel_name }}</p>
+    </div>
+
+    <div class='complaint-detail-card'>
+        <div class='detail-grid'>
+            <div class='detail-item'>
+                <span class='detail-label'>Status</span>
+                <span class='detail-value'>
+                    <span class='status-badge status-{{ request.status|lower|replace(' ', '-') }}'>{{ request.status }}</span>
+                </span>
+            </div>
+            <div class='detail-item'>
+                <span class='detail-label'>Submitted On</span>
+                <span class='detail-value'>{{ request.created_at.strftime('%Y-%m-%d %H:%M') if request.created_at else 'N/A' }}</span>
+            </div>
+            <div class='detail-item'>
+                <span class='detail-label'>Last Updated</span>
+                <span class='detail-value'>{{ request.updated_at.strftime('%Y-%m-%d %H:%M') if request.updated_at else 'N/A' }}</span>
+            </div>
+            <div class='detail-item'>
+                <span class='detail-label'>Decided By</span>
+                <span class='detail-value'>{{ request.decided_by.full_name if request.decided_by else 'Pending decision' }}</span>
+            </div>
+            {% if request.request_type == 'MAINTENANCE' %}
+            <div class='detail-item'>
+                <span class='detail-label'>Issue Type</span>
+                <span class='detail-value'>{{ request.issue_type }}</span>
+            </div>
+            <div class='detail-item'>
+                <span class='detail-label'>Location</span>
+                <span class='detail-value'>{{ request.location }}</span>
+            </div>
+            {% elif request.request_type == 'OUTPASS / LEAVE' %}
+            <div class='detail-item'>
+                <span class='detail-label'>Start Date</span>
+                <span class='detail-value'>{{ request.start_date }}</span>
+            </div>
+            <div class='detail-item'>
+                <span class='detail-label'>End Date</span>
+                <span class='detail-value'>{{ request.end_date }}</span>
+            </div>
+            {% else %}
+            <div class='detail-item'>
+                <span class='detail-label'>Room Preference</span>
+                <span class='detail-value'>{{ request.room_preference }}</span>
+            </div>
+            {% endif %}
+            <div class='detail-item full-width'>
+                <span class='detail-label'>Reason</span>
+                <p class='detail-value'>{{ request.reason }}</p>
+            </div>
+            {% if request.clarification_note %}
+            <div class='detail-item full-width'>
+                <span class='detail-label'>Clarification Requested</span>
+                <p class='detail-value note-box'>{{ request.clarification_note }}</p>
+            </div>
+            {% endif %}
+            {% if request.warden_comment %}
+            <div class='detail-item full-width'>
+                <span class='detail-label'>Warden Comment</span>
+                <p class='detail-value note-box'>{{ request.warden_comment }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+
+{% block title %}Warden Dashboard{% endblock %}
+
+{% block content %}
+<div class='dashboard'>
+    <div class='dashboard-header'>
+        <h2>Hostel Warden Dashboard</h2>
+        <p>{{ user.full_name }} · {{ user.username }} · {{ blocks|length }} assigned block(s)</p>
+    </div>
+
+    <div class='stats-grid'>
+        <div class='stat-card'>
+            <div class='stat-icon'>📥</div>
+            <div class='stat-info'><h3>{{ pending }}</h3><p>Pending Requests</p></div>
+        </div>
+        <div class='stat-card'>
+            <div class='stat-icon'>📄</div>
+            <div class='stat-info'><h3>{{ total }}</h3><p>Total Requests</p></div>
+        </div>
+        <div class='stat-card'>
+            <div class='stat-icon'>🏢</div>
+            <div class='stat-info'><h3>{{ blocks|length }}</h3><p>Assigned Blocks</p></div>
+        </div>
+        <div class='stat-card'>
+            <div class='stat-icon'>🔔</div>
+            <div class='stat-info'><h3>{{ unread_notifications }}</h3><p>Unread Notifications</p></div>
+        </div>
+    </div>
+
+    <div class='quick-actions'>
+        <h3>Quick Actions</h3>
+        <div class='action-buttons'>
+            <a href='{{ url_for('warden.requests') }}' class='btn btn-primary'>Review Requests</a>
+            <a href='{{ url_for('warden.notices') }}' class='btn btn-secondary'>Publish Notice</a>
+        </div>
+    </div>
+
+    <div class='table-card'>
+        <h3>My Assigned Blocks</h3>
+        {% if blocks %}
+        <div class='table-responsive'>
+            <table class='data-table'>
+                <thead><tr><th>Block</th><th>Code</th><th>Rooms</th><th>Notices</th></tr></thead>
+                <tbody>
+                    {% for b in blocks %}
+                    <tr>
+                        <td>{{ b.name }}</td>
+                        <td>{{ b.code or '-' }}</td>
+                        <td>{{ b.total_rooms }}</td>
+                        <td><a href='{{ url_for('warden.notices') }}'>{{ b.notices|length if b.notices is defined else 0 }}</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class='empty-state'>No hostel blocks are assigned to you. Ask the administrator to assign one.</p>
+        {% endif %}
+    </div>
+
+    <div class='table-card'>
+        <h3>Recent Requests</h3>
+        {% if requests %}
+        <div class='table-responsive'>
+            <table class='data-table'>
+                <thead><tr><th>Request ID</th><th>Student</th><th>Type</th><th>Block</th><th>Status</th><th>Date</th></tr></thead>
+                <tbody>
+                    {% for r in requests %}
+                    <tr>
+                        <td><a href='{{ url_for('warden.request_detail', req_pk=r.id) }}'>{{ r.request_id }}</a></td>
+                        <td>{{ r.student.full_name if r.student else 'N/A' }}</td>
+                        <td>{{ r.request_type }}</td>
+                        <td>{{ r.hostel_name }}</td>
+                        <td><span class='status-badge status-{{ r.status|lower|replace(' ', '-') }}'>{{ r.status }}</span></td>
+                        <td>{{ r.created_at.strftime('%Y-%m-%d') if r.created_at else 'N/A' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class='empty-state'>No hostel requests for your blocks.</p>
+        {% endif %}
+    </div>
+
+    <div class='table-card'>
+        <h3>Recent Notices</h3>
+        {% if notices %}
+        <ul class='notice-list'>
+            {% for n in notices %}
+            <li><strong>{{ n.title }}</strong><br><span class='muted'>{{ n.block.name }} · {{ n.created_at.strftime('%Y-%m-%d') }}</span></li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class='empty-state'>No notices published yet.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

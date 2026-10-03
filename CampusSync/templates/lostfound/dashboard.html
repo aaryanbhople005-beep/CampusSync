@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block title %}Lost &amp; Found Desk{% endblock %}
+
+{% block content %}
+<div class='dashboard'>
+    <div class='dashboard-header'>
+        <h2>Lost &amp; Found Desk</h2>
+        <p>{{ user.full_name }} · {{ user.username }}</p>
+    </div>
+
+    <div class='stats-grid'>
+        <div class='stat-card'>
+            <div class='stat-icon'>📥</div>
+            <div class='stat-info'><h3>{{ pending_count }}</h3><p>Claims Awaiting Review</p></div>
+        </div>
+        <div class='stat-card'>
+            <div class='stat-icon'>🎒</div>
+            <div class='stat-info'><h3>{{ found_open }}</h3><p>Active Found Items</p></div>
+        </div>
+        <div class='stat-card'>
+            <div class='stat-icon'>✅</div>
+            <div class='stat-info'><h3>{{ claimed_count }}</h3><p>Claimed Items</p></div>
+        </div>
+        <div class='stat-card'>
+            <div class='stat-icon'>🔔</div>
+            <div class='stat-info'><h3>{{ unread_notifications }}</h3><p>Unread Notifications</p></div>
+        </div>
+    </div>
+
+    {% if retention_items %}
+    <div class='alert-box'>
+        <strong>Retention review needed:</strong> {{ retention_items|length }} found item(s) have been
+        unclaimed for more than {{ retention_days }} days and need administrator review.
+    </div>
+    {% endif %}
+
+    <div class='quick-actions'>
+        <h3>Quick Actions</h3>
+        <div class='action-buttons'>
+            <a href='{{ url_for('lostfound.claims') }}' class='btn btn-primary'>Review Claims</a>
+            <a href='{{ url_for('lostfound.items', type='FOUND') }}' class='btn btn-secondary'>Found Items</a>
+            <a href='{{ url_for('lostfound.items', type='LOST') }}' class='btn btn-secondary'>Lost Items</a>
+        </div>
+    </div>
+
+    <div class='table-card'>
+        <h3>Claims Awaiting Review</h3>
+        {% if pending_claims %}
+        <div class='table-responsive'>
+            <table class='data-table'>
+                <thead><tr><th>Claim</th><th>Item</th><th>Claimant</th><th>Identifying Info</th><th>Submitted</th><th>Action</th></tr></thead>
+                <tbody>
+                    {% for c in pending_claims %}
+                    <tr>
+                        <td>#{{ c.id }}</td>
+                        <td>{{ c.item.item_id }} — {{ c.item.item_name }}</td>
+                        <td>{{ c.student.full_name if c.student else 'N/A' }}</td>
+                        <td>{{ c.identifying_info[:60] }}{% if c.identifying_info|length > 60 %}...{% endif %}</td>
+                        <td>{{ c.created_at.strftime('%Y-%m-%d') if c.created_at else 'N/A' }}</td>
+                        <td><a href='{{ url_for('lostfound.claims') }}' class='btn btn-secondary btn-sm'>Review</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class='empty-state'>No claims are awaiting review.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

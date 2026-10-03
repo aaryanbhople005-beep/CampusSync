@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}Hostel Notices{% endblock %}
+
+{% block content %}
+<div class='page-container'>
+    <div class='page-header'>
+        <h2>Hostel Notices</h2>
+        <p>Publish general notices to students in your hostel blocks</p>
+    </div>
+
+    {% if blocks %}
+    <form method='POST' class='form-card' novalidate>
+        <h3>Publish New Notice</h3>
+        <div class='form-group'>
+            <label for='hostel_block_id'>Hostel Block <span class='required'>*</span></label>
+            <select id='hostel_block_id' name='hostel_block_id'>
+                <option value=''>Select a hostel block</option>
+                {% for b in blocks %}
+                <option value='{{ b.id }}'>{{ b.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class='form-group'>
+            <label for='title'>Title <span class='required'>*</span></label>
+            <input type='text' id='title' name='title' maxlength='200' placeholder='Notice title'>
+        </div>
+        <div class='form-group'>
+            <label for='message'>Message <span class='required'>*</span></label>
+            <textarea id='message' name='message' rows='4' maxlength='2000'
+                      placeholder='Notice message...'></textarea>
+        </div>
+        <button type='submit' class='btn btn-primary'>Publish Notice</button>
+    </form>
+    {% else %}
+    <div class='form-card'>
+        <p class='empty-state'>No hostel blocks are assigned to you, so you cannot publish notices yet.</p>
+    </div>
+    {% endif %}
+
+    <div class='table-card'>
+        <h3>Published Notices ({{ notices|length }})</h3>
+        {% if notices %}
+        <div class='table-responsive'>
+            <table class='data-table'>
+                <thead><tr><th>Block</th><th>Title</th><th>Message</th><th>Published By</th><th>Date</th></tr></thead>
+                <tbody>
+                    {% for n in notices %}
+                    <tr>
+                        <td>{{ n.block.name }}</td>
+                        <td>{{ n.title }}</td>
+                        <td>{{ n.message[:80] }}{% if n.message|length > 80 %}...{% endif %}</td>
+                        <td>{{ n.created_by.full_name if n.created_by else 'N/A' }}</td>
+                        <td>{{ n.created_at.strftime('%Y-%m-%d %H:%M') if n.created_at else 'N/A' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class='empty-state'>No notices published yet.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

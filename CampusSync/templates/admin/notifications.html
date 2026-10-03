@@ -6,67 +6,74 @@
 <div class='page-container'>
     <div class='page-header'>
         <h2>Send Notifications</h2>
-        <p>Create and send notifications to students</p>
+        <p>Broadcast a notification to students</p>
     </div>
-    
-    <div class='form-card' style='margin-bottom: 2rem;'>
+
+    <form method='POST' class='form-card' style='margin-bottom: 2rem;' novalidate>
         <h3>Create New Notification</h3>
-        <form method='POST' class='notification-form'>
+        <div class='form-row'>
             <div class='form-group'>
                 <label for='title'>Title <span class='required'>*</span></label>
-                <input type='text' id='title' name='title' placeholder='Notification title' required maxlength='200'>
+                <input type='text' id='title' name='title' maxlength='200' placeholder='Notification title'>
             </div>
-            
             <div class='form-group'>
-                <label for='message'>Message <span class='required'>*</span></label>
-                <textarea id='message' name='message' placeholder='Notification message...' required rows='4' maxlength='1000'></textarea>
-            </div>
-            
-            <div class='form-group'>
-                <label>Target Audience <span class='required'>*</span></label>
-                <div class='radio-group'>
-                    <label class='radio-label'>
-                        <input type='radio' name='target' value='all' checked> All Students
-                    </label>
-                    <label class='radio-label'>
-                        <input type='radio' name='target' value='specific'> Specific Student
-                    </label>
-                </div>
-            </div>
-            
-            <div class='form-group' id='student-select-group' style='display: none;'>
-                <label for='student_id'>Select Student</label>
-                <select id='student_id' name='student_id'>
-                    <option value=''>Select a student</option>
-                    {% for student in students %}
-                    <option value='{{ student.id }}'>{{ student.full_name }} ({{ student.username }})</option>
-                    {% endfor %}
+                <label for='ntype'>Type</label>
+                <select id='ntype' name='ntype'>
+                    <option value='system'>System</option>
+                    <option value='complaint'>Complaint</option>
+                    <option value='hostel'>Hostel</option>
+                    <option value='notice'>Notice</option>
+                    <option value='claim'>Claim</option>
                 </select>
             </div>
-            
-            <button type='submit' class='btn btn-primary'>Send Notification</button>
-        </form>
-    </div>
-    
+        </div>
+
+        <div class='form-group'>
+            <label for='message'>Message <span class='required'>*</span></label>
+            <textarea id='message' name='message' rows='4' maxlength='1000'
+                      placeholder='Notification message...'></textarea>
+        </div>
+
+        <div class='form-group'>
+            <label>Target Audience <span class='required'>*</span></label>
+            <div class='radio-group'>
+                <label class='radio-label'>
+                    <input type='radio' name='target' value='all' checked onchange='toggleStudentSelect()'> All Students
+                </label>
+                <label class='radio-label'>
+                    <input type='radio' name='target' value='specific' onchange='toggleStudentSelect()'> Specific Student
+                </label>
+            </div>
+        </div>
+
+        <div class='form-group' id='student-select-group' style='display: none;'>
+            <label for='student_id'>Select Student</label>
+            <select id='student_id' name='student_id'>
+                <option value=''>Select a student</option>
+                {% for student in students %}
+                <option value='{{ student.id }}'>{{ student.full_name }} ({{ student.username }})</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <button type='submit' class='btn btn-primary'>Send Notification</button>
+    </form>
+
     <div class='table-card'>
         <h3>Recent Notifications</h3>
         {% if notifications %}
         <div class='table-responsive'>
             <table class='data-table'>
                 <thead>
-                    <tr>
-                        <th>Title</th>
-                        <th>Message</th>
-                        <th>Recipient</th>
-                        <th>Date</th>
-                        <th>Status</th>
-                    </tr>
+                    <tr><th>ID</th><th>Type</th><th>Title</th><th>Message</th><th>Recipient</th><th>Date</th><th>Status</th></tr>
                 </thead>
                 <tbody>
                     {% for notification in notifications %}
                     <tr>
+                        <td>#{{ notification.id }}</td>
+                        <td><span class='status-badge'>{{ (notification.ntype or 'system')|upper }}</span></td>
                         <td>{{ notification.title }}</td>
-                        <td>{{ notification.message[:50] }}{% if notification.message|length > 50 %}...{% endif %}</td>
+                        <td>{{ notification.message[:60] }}{% if notification.message|length > 60 %}...{% endif %}</td>
                         <td>{{ notification.user.full_name if notification.user else 'N/A' }}</td>
                         <td>{{ notification.created_at.strftime('%Y-%m-%d %H:%M') if notification.created_at else 'N/A' }}</td>
                         <td>

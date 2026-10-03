@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}My Complaints{% endblock %}
+
+{% block content %}
+<div class='page-container'>
+    <div class='page-header'>
+        <h2>My Complaint Queue</h2>
+        <p>Complaints routed to your department or assigned to you</p>
+    </div>
+
+    <form method='GET' class='form-card' novalidate>
+        <div class='form-row'>
+            <div class='form-group'>
+                <label for='q'>Search</label>
+                <input type='text' id='q' name='q' value='{{ filters.q }}'
+                       placeholder='Complaint ID, title or description'>
+            </div>
+            <div class='form-group'>
+                <label for='status'>Status</label>
+                <select id='status' name='status'>
+                    <option value=''>All statuses</option>
+                    {% for s in statuses %}
+                    <option value='{{ s }}' {% if filters.status == s %}selected{% endif %}>{{ s }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class='form-group' style='display:flex;align-items:flex-end;gap:.5rem;'>
+                <button type='submit' class='btn btn-primary'>Filter</button>
+                {% if filters.sla %}
+                <a href='{{ url_for('staff.complaints') }}' class='btn btn-secondary'>Clear SLA filter</a>
+                {% endif %}
+            </div>
+        </div>
+        <label class='radio-label'>
+            <input type='checkbox' name='sla' value='1' {% if filters.sla == '1' %}checked{% endif %} onchange='this.form.submit()'>
+            Show SLA breached complaints only
+        </label>
+    </form>
+
+    <div class='table-card'>
+        <h3>Assigned Complaints ({{ complaints|length }})</h3>
+        {% if complaints %}
+        <div class='table-responsive'>
+            <table class='data-table'>
+                <thead>
+                    <tr><th>ID</th><th>Title</th><th>Category</th><th>Student</th><th>Status</th><th>SLA Due</th><th>Action</th></tr>
+                </thead>
+                <tbody>
+                    {% for c in complaints %}
+                    <tr class='{% if c.sla_breached %}row-alert{% endif %}'>
+                        <td>{{ c.complaint_id }}</td>
+                        <td>{{ c.title }}</td>
+                        <td>{{ c.category }}</td>
+                        <td>{{ c.student.full_name if c.student else 'N/A' }}</td>
+                        <td><span class='status-badge status-{{ c.status|lower|replace(' ', '-') }}'>{{ c.status }}</span></td>
+                        <td>
+                            {% if c.sla_due_at %}
+                                {{ c.sla_due_at.strftime('%Y-%m-%d') }}
+                                {% if c.sla_breached %}<span class='status-badge status-closed'>BREACHED</span>{% endif %}
+                            {% else %}—{% endif %}
+                        </td>
+                        <td><a href='{{ url_for('staff.complaint_detail', complaint_pk=c.id) }}' class='btn btn-secondary btn-sm'>Open</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class='empty-state'>No complaints match your filters.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

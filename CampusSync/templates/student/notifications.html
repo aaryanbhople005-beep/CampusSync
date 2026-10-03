@@ -6,24 +6,24 @@
 <div class='page-container'>
     <div class='page-header'>
         <h2>Notifications</h2>
-        <p>View your system notifications</p>
+        <p>Your notifications, newest first</p>
     </div>
-    
+
     <div class='table-card'>
         {% if notifications %}
         <div class='table-responsive'>
             <table class='data-table'>
                 <thead>
                     <tr>
-                        <th>Title</th>
-                        <th>Message</th>
-                        <th>Date</th>
-                        <th>Status</th>
+                        <th>ID</th><th>Type</th><th>Title</th><th>Message</th>
+                        <th>Date</th><th>Status</th><th></th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for notification in notifications %}
                     <tr class='{% if not notification.is_read %}unread{% endif %}'>
+                        <td>#{{ notification.id }}</td>
+                        <td><span class='status-badge'>{{ (notification.ntype or 'system')|upper }}</span></td>
                         <td>{{ notification.title }}</td>
                         <td>{{ notification.message }}</td>
                         <td>{{ notification.created_at.strftime('%Y-%m-%d %H:%M') if notification.created_at else 'N/A' }}</td>
@@ -31,6 +31,15 @@
                             <span class='status-badge {% if notification.is_read %}status-read{% else %}status-unread{% endif %}'>
                                 {% if notification.is_read %}Read{% else %}Unread{% endif %}
                             </span>
+                        </td>
+                        <td>
+                            {% if notification.related_module %}
+                            <form method='POST' action='{{ url_for('student.read_notification', notification_pk=notification.id) }}'>
+                                <button type='submit' class='btn btn-secondary btn-sm'>
+                                    {% if notification.is_read %}View related{% else %}Mark read &amp; view{% endif %}
+                                </button>
+                            </form>
+                            {% endif %}
                         </td>
                     </tr>
                     {% endfor %}

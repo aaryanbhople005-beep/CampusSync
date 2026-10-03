@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+
+{% block title %}Complaint {{ complaint.complaint_id }}{% endblock %}
+
+{% block content %}
+<div class='page-container'>
+    <div class='page-header'>
+        <h2>{{ complaint.title }}</h2>
+        <p>{{ complaint.complaint_id }} · {{ complaint.category }}
+           {%- if complaint.department %} · {{ complaint.department.name }}{% endif %}</p>
+    </div>
+
+    {% if complaint.sla_breached %}
+    <div class='alert-box'>
+        <strong>SLA breached.</strong> This complaint passed its resolution threshold on
+        {{ complaint.sla_due_at.strftime('%Y-%m-%d %H:%M') if complaint.sla_due_at else 'N/A' }}.
+    </div>
+    {% endif %}
+
+    <div class='complaint-detail-card'>
+        <div class='detail-grid'>
+            <div class='detail-item'>
+                <span class='detail-label'>Status</span>
+                <span class='detail-value'><span class='status-badge status-{{ complaint.status|lower|replace(' ', '-') }}'>{{ complaint.status }}</span></span>
+            </div>
+            <div class='detail-item'>
+                <span class='detail-label'>Submitted</span>
+                <span class='detail-value'>{{ complaint.created_at.strftime('%Y-%m-%d %H:%M') if complaint.created_at else 'N/A' }}</span>
+            </div>
+            <div class='detail-item'>
+                <span class='detail-label'>Student</span>
+                <span class='detail-value'>{{ complaint.student.full_name if complaint.student else 'N/A' }}</span>
+            </div>
+            <div class='detail-item'>
+                <span class='detail-label'>Reopened Count</span>
+                <span class='detail-value'>{{ complaint.reopen_count or 0 }}</span>
+            </div>
+            <div class='detail-item full-width'>
+                <span class='detail-label'>Description</span>
+                <p class='detail-value'>{{ complaint.description }}</p>
+            </div>
+            {% if complaint.attachment_path %}
+            <div class='detail-item full-width'>
+                <span class='detail-label'>Attachment</span>
+                <span class='detail-value'>{{ complaint.attachment_path }}</span>
+            </div>
+            {% endif %}
+            {% if complaint.resolution_notes %}
+            <div class='detail-item full-width'>
+                <span class='detail-label'>Resolution Notes</span>
+                <p class='detail-value note-box'>{{ complaint.resolution_notes }}</p>
+            </div>
+            {% endif %}
+            {% if complaint.escalation_note %}
+            <div class='detail-item full-width'>
+                <span class='detail-label'>Escalation Note</span>
+                <p class='detail-value note-box'>{{ complaint.escalation_note }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class='form-card'>
+        <h3>Update Status</h3>
+        {% if allowed_next %}
+        <form method='POST' novalidate>
+            <input type='hidden' name='action' value='status'>
+            <div class='form-row'>
+                <div class='form-group'>
+                    <label for='status'>New Status <span class='required'>*</span></label>
+                    <select id='status' name='status'>
+                        {% for s in allowed_next %}
+                        <option value='{{ s }}'>{{ s }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class='form-group'>
+                    <label for='note'>Note</label>
+                    <input type='text' id='note' name='note' maxlength='500'
+                           placeholder='Short note for the status history'>
+                </div>
+            </div>
+            <div class='form-group'>
+                <label for='resolution_notes'>Resolution Notes (required to RESOLVE)</label>
+                <textarea id='resolution_notes' name='resolution_notes' rows='4' maxlength='2000'
+                          placeholder='Describe how the complaint was resolved...'></textarea>
+            </div>
+            <button type='submit' class='btn btn-primary'>Update Status</button>
+        </form>
+        {% else %}
+        <p class='empty-state'>No further status change is available from {{ complaint.status }}.</p>
+        {% endif %}
+    </div>
+
+    <div class='form-card'>
+        <h3>Escalate to Administrator</h3>
+        <form method='POST' novalidate>
+            <input type='hidden' name='action' value='escalate'>
+            <div class='form-group'>
+                <label for='escalation_note'>Escalation Note <span class='required'>*</span></label>
+                <textarea id='escalation_note' name='escalation_note' rows='3' maxlength='1000'
+                          placeholder='Why does this complaint need administrator attention?'></textarea>
+            </div>
+            <button type='submit' class='btn btn-secondary'>Escalate</button>
+        </form>
+    </div>
+
+    <div class='table-card'>
+        <h3>Status History</h3>
+        {% if history %}
+        <div class='table-responsive'>
+            <table class='data-table'>
+                <thead><tr><th>Date</th><th>From</th><th>To</th><th>Changed By</th><th>Note</th></tr></thead>
+                <tbody>
+                    {% for h in history %}
+                    <tr>
+                        <td>{{ h.created_at.strftime('%Y-%m-%d %H:%M') if h.created_at else 'N/A' }}</td>
+                        <td>{{ h.from_status or '-' }}</td>
+                        <td><span class='status-badge status-{{ h.to_status|lower|replace(' ', '-') }}'>{{ h.to_status }}</span></td>
+                        <td>{{ h.changed_by.full_name if h.changed_by else 'System' }}</td>
+                        <td>{{ h.note or '-' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class='empty-state'>No status history recorded yet.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

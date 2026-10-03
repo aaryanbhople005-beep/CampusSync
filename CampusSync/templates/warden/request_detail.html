@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+
+{% block title %}Request {{ request.request_id }}{% endblock %}
+
+{% block content %}
+<div class='page-container'>
+    <div class='page-header'>
+        <h2>Request {{ request.request_id }}</h2>
+        <p>{{ request.request_type }} · {{ request.hostel_name }} · {{ request.student.full_name if request.student else '' }}</p>
+    </div>
+
+    <div class='complaint-detail-card'>
+        <div class='detail-grid'>
+            <div class='detail-item'>
+                <span class='detail-label'>Status</span>
+                <span class='detail-value'><span class='status-badge status-{{ request.status|lower|replace(' ', '-') }}'>{{ request.status }}</span></span>
+            </div>
+            <div class='detail-item'>
+                <span class='detail-label'>Submitted</span>
+                <span class='detail-value'>{{ request.created_at.strftime('%Y-%m-%d %H:%M') if request.created_at else 'N/A' }}</span>
+            </div>
+            <div class='detail-item'>
+                <span class='detail-label'>Student</span>
+                <span class='detail-value'>{{ request.student.full_name if request.student else 'N/A' }}</span>
+            </div>
+            <div class='detail-item'>
+                <span class='detail-label'>Student Contact</span>
+                <span class='detail-value'>{{ request.student.email if request.student else '-' }}</span>
+            </div>
+            {% if request.request_type == 'MAINTENANCE' %}
+            <div class='detail-item'><span class='detail-label'>Issue Type</span><span class='detail-value'>{{ request.issue_type }}</span></div>
+            <div class='detail-item'><span class='detail-label'>Location</span><span class='detail-value'>{{ request.location }}</span></div>
+            {% elif request.request_type == 'OUTPASS / LEAVE' %}
+            <div class='detail-item'><span class='detail-label'>Start Date</span><span class='detail-value'>{{ request.start_date }}</span></div>
+            <div class='detail-item'><span class='detail-label'>End Date</span><span class='detail-value'>{{ request.end_date }}</span></div>
+            {% else %}
+            <div class='detail-item'><span class='detail-label'>Room Preference</span><span class='detail-value'>{{ request.room_preference }}</span></div>
+            {% endif %}
+            <div class='detail-item full-width'>
+                <span class='detail-label'>Reason</span>
+                <p class='detail-value'>{{ request.reason }}</p>
+            </div>
+            {% if request.clarification_note %}
+            <div class='detail-item full-width'>
+                <span class='detail-label'>Previous Clarification Request</span>
+                <p class='detail-value note-box'>{{ request.clarification_note }}</p>
+            </div>
+            {% endif %}
+            {% if request.warden_comment %}
+            <div class='detail-item full-width'>
+                <span class='detail-label'>Warden Comment</span>
+                <p class='detail-value note-box'>{{ request.warden_comment }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class='form-card'>
+        <h3>Take Action</h3>
+        <form method='POST' novalidate>
+            <input type='hidden' name='action' value='status'>
+            <div class='form-row'>
+                <div class='form-group'>
+                    <label for='status'>New Status <span class='required'>*</span></label>
+                    <select id='status' name='status'>
+                        {% for s in statuses %}
+                        <option value='{{ s }}' {% if request.status == s %}selected{% endif %}>{{ s }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class='form-group'>
+                    <label for='clarification'>Clarification (required for CLARIFICATION REQUIRED)</label>
+                    <input type='text' id='clarification' name='clarification' maxlength='500'
+                           placeholder='What does the student need to clarify?'>
+                </div>
+            </div>
+            <div class='form-group'>
+                <label for='comment'>Comment</label>
+                <textarea id='comment' name='comment' rows='3' maxlength='500'
+                          placeholder='Optional comment visible to the student'></textarea>
+            </div>
+            <button type='submit' class='btn btn-primary'>Update Status</button>
+        </form>
+    </div>
+
+    <div class='form-card'>
+        <h3>Add Comment Only</h3>
+        <form method='POST' novalidate>
+            <input type='hidden' name='action' value='comment'>
+            <div class='form-group'>
+                <label for='comment_only'>Comment <span class='required'>*</span></label>
+                <textarea id='comment_only' name='comment' rows='3' maxlength='500'
+                          placeholder='Add a comment without changing the status'></textarea>
+            </div>
+            <button type='submit' class='btn btn-secondary'>Add Comment</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

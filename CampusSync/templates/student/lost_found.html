@@ -1,77 +1,175 @@
 {% extends 'base.html' %}
 
-{% block title %}Lost & Found{% endblock %}
+{% block title %}Lost &amp; Found{% endblock %}
 
 {% block content %}
 <div class='page-container'>
     <div class='page-header'>
-        <h2>Lost & Found</h2>
-        <p>Report lost items or claim found items</p>
+        <h2>Lost &amp; Found</h2>
+        <p>Report a lost or found item, search listings and submit claims</p>
     </div>
-    
+
     <div class='tabs'>
-        <button class='tab-btn active' data-tab='report'>Report Item</button>
+        <button class='tab-btn active' data-tab='search'>Search Items</button>
+        <button class='tab-btn' data-tab='report'>Report Item</button>
         <button class='tab-btn' data-tab='claim'>Claim Found Item</button>
         <button class='tab-btn' data-tab='my-items'>My Reports</button>
+        <button class='tab-btn' data-tab='my-claims'>My Claims</button>
     </div>
-    
-    <div id='report' class='tab-content active'>
-        <form method='POST' class='form-card'>
+
+    <!-- ---------------- search ---------------- -->
+    <div id='search' class='tab-content active'>
+        <form method='GET' class='form-card' novalidate>
+            <h3>Search Listings</h3>
+            <div class='form-row'>
+                <div class='form-group'>
+                    <label for='keyword'>Keyword</label>
+                    <input type='text' id='keyword' name='keyword' value='{{ search.keyword }}'
+                           placeholder='Item name, description, location or ID'>
+                </div>
+                <div class='form-group'>
+                    <label for='category'>Category</label>
+                    <select id='category' name='category'>
+                        <option value=''>All categories</option>
+                        {% for c in categories %}
+                        <option value='{{ c }}' {% if search.category == c %}selected{% endif %}>{{ c }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class='form-group'>
+                    <label for='type'>Type</label>
+                    <select id='type' name='type'>
+                        <option value=''>Lost and Found</option>
+                        <option value='LOST' {% if search.type == 'LOST' %}selected{% endif %}>Lost only</option>
+                        <option value='FOUND' {% if search.type == 'FOUND' %}selected{% endif %}>Found only</option>
+                    </select>
+                </div>
+            </div>
+            <div class='form-row'>
+                <div class='form-group'>
+                    <label for='from'>Date From</label>
+                    <input type='date' id='from' name='from' value='{{ search['from'] }}'>
+                </div>
+                <div class='form-group'>
+                    <label for='to'>Date To</label>
+                    <input type='date' id='to' name='to' value='{{ search['to'] }}'>
+                </div>
+                <div class='form-group' style='display:flex;align-items:flex-end;'>
+                    <button type='submit' class='btn btn-primary'>Search</button>
+                </div>
+            </div>
+        </form>
+
+        <div class='table-card'>
+            <h3>Results ({{ items|length }})</h3>
+            {% if items %}
+            <div class='table-responsive'>
+                <table class='data-table'>
+                    <thead>
+                        <tr>
+                            <th>Item ID</th><th>Item</th><th>Category</th><th>Type</th>
+                            <th>Location</th><th>Date</th><th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in items %}
+                        <tr>
+                            <td>{{ item.item_id }}</td>
+                            <td>{{ item.item_name }}<br><span class='muted'>{{ item.description[:60] }}{% if item.description|length > 60 %}...{% endif %}</span></td>
+                            <td>{{ item.item_category or '-' }}</td>
+                            <td><span class='status-badge status-{{ item.item_type|lower }}'>{{ item.item_type }}</span></td>
+                            <td>{{ item.location }}</td>
+                            <td>{{ item.date }}</td>
+                            <td>
+                                <span class='status-badge status-{{ item.status|lower }}'>{{ item.status }}</span>
+                                {% if item.retention_flag %}<span class='status-badge status-unread'>OLD</span>{% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class='empty-state'>No items matched your search.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- ---------------- report ---------------- -->
+    <div id='report' class='tab-content'>
+        <form method='POST' class='form-card' novalidate>
             <input type='hidden' name='action' value='report'>
+            <h3>Report a Lost or Found Item</h3>
             <div class='form-row'>
                 <div class='form-group'>
                     <label for='item_name'>Item Name <span class='required'>*</span></label>
-                    <input type='text' id='item_name' name='item_name' placeholder='e.g., Black Backpack, iPhone 13' required maxlength='100'>
+                    <input type='text' id='item_name' name='item_name' maxlength='100'
+                           placeholder='e.g., Black Backpack'>
                 </div>
                 <div class='form-group'>
+                    <label for='item_category'>Category</label>
+                    <input type='text' id='item_category' name='item_category' maxlength='60'
+                           placeholder='e.g., Electronics, Bags, Personal'>
+                </div>
+            </div>
+            <div class='form-row'>
+                <div class='form-group'>
                     <label for='item_type'>Type <span class='required'>*</span></label>
-                    <select id='item_type' name='item_type' required>
+                    <select id='item_type' name='item_type'>
                         <option value=''>Select type</option>
-                        <option value='Lost'>Lost</option>
-                        <option value='Found'>Found</option>
+                        <option value='LOST'>LOST</option>
+                        <option value='FOUND'>FOUND</option>
                     </select>
+                </div>
+                <div class='form-group'>
+                    <label for='location'>Location <span class='required'>*</span></label>
+                    <input type='text' id='location' name='location' maxlength='200'
+                           placeholder='Where was it lost or found?'>
+                </div>
+                <div class='form-group'>
+                    <label for='date'>Date <span class='required'>*</span></label>
+                    <input type='date' id='date' name='date' max='{{ today }}'>
                 </div>
             </div>
             <div class='form-group'>
                 <label for='description'>Description <span class='required'>*</span></label>
-                <textarea id='description' name='description' placeholder='Detailed description of the item...' required rows='4' maxlength='1000'></textarea>
-            </div>
-            <div class='form-row'>
-                <div class='form-group'>
-                    <label for='location'>Location <span class='required'>*</span></label>
-                    <input type='text' id='location' name='location' placeholder='Where was it lost/found?' required maxlength='200'>
-                </div>
-                <div class='form-group'>
-                    <label for='date'>Date <span class='required'>*</span></label>
-                    <input type='date' id='date' name='date' required max='{{ today }}'>
-                </div>
+                <textarea id='description' name='description' rows='4' maxlength='1000'
+                          placeholder='Detailed description of the item...'></textarea>
             </div>
             <button type='submit' class='btn btn-primary'>Submit Report</button>
         </form>
     </div>
-    
+
+    <!-- ---------------- claim ---------------- -->
     <div id='claim' class='tab-content'>
-        {% if items %}
-        <form method='POST' class='form-card'>
+        {% if claimable %}
+        <form method='POST' class='form-card' novalidate>
             <input type='hidden' name='action' value='claim'>
+            <h3>Claim a Found Item</h3>
             <div class='form-group'>
-                <label for='claim_item_id'>Select Item to Claim <span class='required'>*</span></label>
-                <select id='claim_item_id' name='claim_item_id' required>
-                    <option value=''>Select an item</option>
-                    {% for item in items %}
+                <label for='item_id'>Select Item <span class='required'>*</span></label>
+                <select id='item_id' name='item_id'>
+                    <option value=''>Select a found item</option>
+                    {% for item in claimable %}
                     <option value='{{ item.item_id }}'>{{ item.item_id }} - {{ item.item_name }} ({{ item.location }}, {{ item.date }})</option>
                     {% endfor %}
                 </select>
             </div>
-            <button type='submit' class='btn btn-primary'>Claim Item</button>
+            <div class='form-group'>
+                <label for='identifying_info'>Identifying Information <span class='required'>*</span></label>
+                <textarea id='identifying_info' name='identifying_info' rows='3'
+                          placeholder='Describe the item and any unique marks that prove it is yours...'></textarea>
+            </div>
+            <button type='submit' class='btn btn-primary'>Submit Claim</button>
         </form>
         {% else %}
         <div class='form-card'>
-            <p class='empty-state'>No found items available for claiming at the moment.</p>
+            <p class='empty-state'>No found items are currently available for claiming.</p>
         </div>
         {% endif %}
     </div>
-    
+
+    <!-- ---------------- my items ---------------- -->
     <div id='my-items' class='tab-content'>
         <div class='table-card'>
             <h3>My Reports</h3>
@@ -79,24 +177,18 @@
             <div class='table-responsive'>
                 <table class='data-table'>
                     <thead>
-                        <tr>
-                            <th>Item ID</th>
-                            <th>Item Name</th>
-                            <th>Type</th>
-                            <th>Location</th>
-                            <th>Date</th>
-                            <th>Status</th>
-                        </tr>
+                        <tr><th>Item ID</th><th>Item</th><th>Category</th><th>Type</th><th>Location</th><th>Date</th><th>Status</th></tr>
                     </thead>
                     <tbody>
                         {% for item in user_items %}
                         <tr>
                             <td>{{ item.item_id }}</td>
                             <td>{{ item.item_name }}</td>
-                            <td><span class='status-badge status-{{ item.item_type.lower() }}'>{{ item.item_type }}</span></td>
+                            <td>{{ item.item_category or '-' }}</td>
+                            <td><span class='status-badge status-{{ item.item_type|lower }}'>{{ item.item_type }}</span></td>
                             <td>{{ item.location }}</td>
                             <td>{{ item.date }}</td>
-                            <td><span class='status-badge status-{{ item.status.lower() }}'>{{ item.status }}</span></td>
+                            <td><span class='status-badge status-{{ item.status|lower }}'>{{ item.status }}</span></td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -104,6 +196,35 @@
             </div>
             {% else %}
             <p class='empty-state'>You haven't reported any items yet.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- ---------------- my claims ---------------- -->
+    <div id='my-claims' class='tab-content'>
+        <div class='table-card'>
+            <h3>My Claims</h3>
+            {% if my_claims %}
+            <div class='table-responsive'>
+                <table class='data-table'>
+                    <thead>
+                        <tr><th>Claim</th><th>Item</th><th>Submitted</th><th>Status</th><th>Review Note</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for claim in my_claims %}
+                        <tr>
+                            <td>#{{ claim.id }}</td>
+                            <td>{{ claim.item.item_id }} — {{ claim.item.item_name }}</td>
+                            <td>{{ claim.created_at.strftime('%Y-%m-%d %H:%M') if claim.created_at else 'N/A' }}</td>
+                            <td><span class='status-badge status-{{ claim.status|lower }}'>{{ claim.status }}</span></td>
+                            <td>{{ claim.review_note or '-' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class='empty-state'>You have not submitted any claims yet.</p>
             {% endif %}
         </div>
     </div>

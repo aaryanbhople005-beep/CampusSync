@@ -285,6 +285,9 @@ def complaint_detail(complaint_pk):
     return render_template('admin/complaint_detail.html', complaint=complaint,
                            history=history, allowed_next=allowed_next,
                            statuses=COMPLAINT_STATUSES,
+                           staff_members=User.query.filter_by(role=ROLE_STAFF,
+                                                              is_active=True).order_by(
+                               User.full_name).all(),
                            unread_notifications=unread_count(current_user().id))
 
 
@@ -697,8 +700,11 @@ def blocks():
                 flash('Hostel block name is required.', 'error')
             else:
                 if action == 'create':
-                    if HostelBlock.query.filter_by(name=name).first():
-                        flash('A hostel block with that name already exists.', 'error')
+                    clash = HostelBlock.query.filter(
+                        db.or_(HostelBlock.name == name,
+                               HostelBlock.code == code if code else False)).first()
+                    if clash:
+                        flash('A hostel block with that name or code already exists.', 'error')
                     else:
                         db.session.add(HostelBlock(
                             name=name, code=code or None,

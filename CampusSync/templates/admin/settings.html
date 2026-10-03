@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block title %}System Settings{% endblock %}
+
+{% block content %}
+<div class='page-container'>
+    <div class='page-header'>
+        <h2>System Configuration</h2>
+        <p>Configurable business rules. The SRS marks the concrete university values as TBD,
+           so the values below are development defaults that can be changed here without code changes.</p>
+    </div>
+
+    <form method='POST' class='form-card' novalidate>
+        <h3>Business Rules</h3>
+        {% for key, (default_value, description) in defaults.items() %}
+        <div class='form-group'>
+            <label for='{{ key }}'>{{ key }}</label>
+            {% if default_value in ('true', 'false') %}
+            <select id='{{ key }}' name='{{ key }}'>
+                <option value='true' {% if rows.get(key) and rows[key].value == 'true' %}selected{% endif %}>true</option>
+                <option value='false' {% if rows.get(key) and rows[key].value == 'false' %}selected{% endif %}>false</option>
+            </select>
+            {% else %}
+            <input type='text' id='{{ key }}' name='{{ key }}'
+                   value='{{ rows[key].value if key in rows else default_value }}'>
+            {% endif %}
+            <span class='field-help'>{{ description }} (default: {{ default_value }})</span>
+        </div>
+        {% endfor %}
+        <button type='submit' class='btn btn-primary'>Save Configuration</button>
+    </form>
+
+    <div class='table-card'>
+        <h3>Email / SMS Integration</h3>
+        <p class='muted'>
+            Email, SMS and push delivery are intentionally <strong>not</strong> implemented.
+            No SMTP or SMS provider credentials are available in this environment, so rather
+            than faking a delivery, notifications are delivered in-app through the notification
+            centre. This is the clean integration boundary: adding a real provider later means
+            writing a dispatcher in <code>security.notify()</code> and leaving the rest untouched.
+        </p>
+    </div>
+
+    <div class='table-card'>
+        <h3>External Systems (SIS / SSO)</h3>
+        <p class='muted'>
+            Student information system and single sign-on are also not connected. User accounts are
+            managed locally by the administrator. The <code>users</code> table is the single source
+            of student identity, so an SIS import would only need to populate that table.
+        </p>
+    </div>
+</div>
+{% endblock %}
