@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block title %}My Hostel{% endblock %}
+
+{% block content %}
+<div class='page-container'>
+    <div class='page-header'>
+        <h2>My Hostel</h2>
+        <p>Your hostel block, room allocation and block notices</p>
+    </div>
+
+    <div class='table-card'>
+        <h3>Room Allocation</h3>
+        {% if block %}
+        <div class='detail-grid'>
+            <div class='detail-item'>
+                <span class='detail-label'>Hostel Block</span>
+                <span class='detail-value'>{{ block.name }}</span>
+            </div>
+            <div class='detail-item'>
+                <span class='detail-label'>Block Code</span>
+                <span class='detail-value'>{{ block.code or '-' }}</span>
+            </div>
+            <div class='detail-item'>
+                <span class='detail-label'>Room Number</span>
+                <span class='detail-value'>{{ allocation.room_number }}</span>
+            </div>
+            <div class='detail-item'>
+                <span class='detail-label'>Bed</span>
+                <span class='detail-value'>{{ allocation.bed_number or '-' }}</span>
+            </div>
+            <div class='detail-item'>
+                <span class='detail-label'>Allocated From</span>
+                <span class='detail-value'>{{ allocation.allocated_from.strftime('%Y-%m-%d') if allocation.allocated_from else '-' }}</span>
+            </div>
+            <div class='detail-item'>
+                <span class='detail-label'>Warden</span>
+                <span class='detail-value'>{{ block.warden.full_name if block.warden else 'Not assigned' }}</span>
+            </div>
+        </div>
+        {% else %}
+        <p class='empty-state'>No hostel allocation is recorded for your account. You can submit a hostel allocation request.</p>
+        <a href='{{ url_for('student.hostel_request') }}' class='btn btn-primary'>Submit Hostel Request</a>
+        {% endif %}
+    </div>
+
+    <div class='table-card'>
+        <h3>Hostel Notices</h3>
+        {% if notices %}
+            {% for n in notices %}
+            <div class='notice-item'>
+                <strong>{{ n.title }}</strong>
+                <span class='muted'>{{ n.created_at.strftime('%Y-%m-%d %H:%M') if n.created_at else '' }}
+                    {%- if n.created_by %} · {{ n.created_by.full_name }}{% endif %}</span>
+                <p>{{ n.message }}</p>
+            </div>
+            {% endfor %}
+        {% else %}
+        <p class='empty-state'>No hostel notices for your block at the moment.</p>
+        {% endif %}
+    </div>
+
+    <div class='table-card'>
+        <h3>Hostel Request History</h3>
+        {% if requests %}
+        <div class='table-responsive'>
+            <table class='data-table'>
+                <thead>
+                    <tr><th>Request ID</th><th>Type</th><th>Block</th><th>Status</th><th>Date</th></tr>
+                </thead>
+                <tbody>
+                    {% for r in requests %}
+                    <tr>
+                        <td><a href='{{ url_for('student.hostel_request_detail', req_pk=r.id) }}'>{{ r.request_id }}</a></td>
+                        <td>{{ r.request_type or 'HOSTEL ALLOCATION' }}</td>
+                        <td>{{ r.hostel_name }}</td>
+                        <td><span class='status-badge status-{{ r.status|lower|replace(' ', '-') }}'>{{ r.status }}</span></td>
+                        <td>{{ r.created_at.strftime('%Y-%m-%d') if r.created_at else 'N/A' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class='empty-state'>You have not submitted any hostel requests yet.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
